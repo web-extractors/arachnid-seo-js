@@ -1,5 +1,5 @@
 'use strict'
 
-const Aranchind = require('./lib/Arachnid');
+const Arachnid = require('./lib/Arachnid');
 
-module.exports = Aranchind;
+module.exports = Arachnid;
