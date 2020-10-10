@@ -33,6 +33,7 @@
   },
   "homepage": "https://github.com/WebExtractors/Arachnid#readme",
   "dependencies": {
-    "puppeteer": "5.2.1"
+    "puppeteer": "5.2.1",
+    "queue-fifo": "^0.2.6"
   }
 }
