@@ -1,6 +1,6 @@
 const Arachnid = require('../lib/Arachnid');
 
-const arachnid = new Arachnid().setDomain('https://www.google.com/').setConcurrency(5).setCrawlDepth(2)
+const arachnid = new Arachnid().setDomain('https://laravel-news.com/').setConcurrency(5).setCrawlDepth(2)
 arachnid.traverse()
 arachnid.on('info', res => console.log('info events', res))
 arachnid.on('results', res => console.log('results event', res))

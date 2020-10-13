@@ -2,15 +2,19 @@ const Arachnid = require('../lib/Arachnid');
 
 async function crawl(domain, depth, concurrency) {
     const startTime = Date.now();
-    const arachnidObj = new Arachnid(domain, depth, concurrency, [
-        '--disable-gpu',
-        '--disable-dev-shm-usage',
-        '--disable-setuid-sandbox',
-        '--no-first-run',
-        '--no-sandbox',
-        '--no-zygote',
-        '--single-process',
-    ]);
+    const arachnidObj = new Arachnid()
+        .setDomain('https://laravel-news.com/')
+        .setConcurrency(5)
+        .setCrawlDepth(2)
+        .setParameters([
+            '--disable-gpu',
+            '--disable-dev-shm-usage',
+            '--disable-setuid-sandbox',
+            '--no-first-run',
+            '--no-sandbox',
+            '--no-zygote',
+            '--single-process',
+        ])
     const results = await arachnidObj.traverse();
 
     const endTime = Date.now();
