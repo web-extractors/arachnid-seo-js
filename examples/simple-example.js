@@ -4,8 +4,8 @@ async function crawl(domain, depth, concurrency) {
     const startTime = Date.now();
     const arachnidObj = new Arachnid()
         .setDomain(domain)
-        .setConcurrency(5)
-        .setCrawlDepth(2)
+        .setConcurrency(concurrency)
+        .setCrawlDepth(depth)
         .setPuppeteerParameters([
             '--disable-gpu',
             '--disable-dev-shm-usage',
