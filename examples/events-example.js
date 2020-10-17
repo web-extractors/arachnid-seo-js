@@ -7,16 +7,12 @@ arachnid.on('info', response => console.log('info events', response));
 arachnid.on('results', response => { // returns Map object url: {statusCode, metadata, h1, h2 etc...}
     console.log('results event'); 
     for (let [key, value] of response) {
-        console.log(key + ' : ' + value);
+        console.log(key + ' : ' + value.valueOf());
     }
 });
 arachnid.on('pageCrawlingStarted', response => {
     console.log('pageCrawlingStarted events');
     console.log(response.url);
-});
-arachnid.on('pageResponseReceived', response => {
-    console.log('pageResponseReceived events');
-    console.log(response.url, response.statusCode);
 });
 arachnid.on('pageCrawlingFinished', response => {
     console.log('pageCrawlingFinished events');
