@@ -16,8 +16,7 @@ arachnid.on('pageCrawlingStarted', response => {
 });
 arachnid.on('pageCrawlingFinished', response => {
     console.log('pageCrawlingFinished events');
-    console.log(response.url);
-    console.log(response.statusCode);
+    console.log(response);
 });
 arachnid.on('pageCrawlingFailed', response => {
     console.log('pageCrawlingFailed events');
