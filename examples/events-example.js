@@ -1,6 +1,6 @@
 const Arachnid = require('../lib/Arachnid');
 
-const domain = 'https://laravel-news.com/';
+const domain = 'https://www.example.com/';
 const arachnid = new Arachnid().setDomain(domain).setConcurrency(5).setCrawlDepth(2);
 
 arachnid.on('results', response => { // returns Map object url: {statusCode, metadata, h1, h2 etc...}
