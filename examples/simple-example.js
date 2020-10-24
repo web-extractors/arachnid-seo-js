@@ -23,4 +23,4 @@ async function crawl(domain, depth, concurrency) {
     console.log(`Found ${results.size} results with depth=${depth} concurrency=${concurrency}`);
 }
 
-crawl("https://laravel-news.com/", 2, 5);
+crawl("https://www.example.com/", 2, 5);
