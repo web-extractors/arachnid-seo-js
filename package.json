@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "docs": "jsdoc2md lib/*.js > api.md"
+    "documentation": "jsdoc2md lib/*.js lib/**/*.js> API.md"
   },
   "repository": {
     "type": "git",
