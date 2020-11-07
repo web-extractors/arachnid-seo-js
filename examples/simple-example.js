@@ -6,6 +6,7 @@ async function crawl(domain, depth, concurrency) {
         .setDomain(domain)
         .setConcurrency(concurrency)
         .setCrawlDepth(depth)
+        .shouldFollowSubdomains(true)
         .setPuppeteerParameters([
             '--disable-gpu',
             '--disable-dev-shm-usage',
