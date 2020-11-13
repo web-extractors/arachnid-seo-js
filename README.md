@@ -7,10 +7,13 @@ The project implemented in PHP, [Arachnid PHP](https://github.com/zrashwani/arac
 ### Features
 1. Simple NodeJS application.
 2. Crawl pages in variable depth provided by user.
-3. Get basic information helps website owners & SEO specialists enhance thier site ranking. 
-4. Event driven implemenation enable users of library to consume output in real-time
+3. Get basic information helps website owners & SEO specialists enhance their site ranking. 
+4. Event driven implemenation enable users of library to consume output in real-time.
+5. Implements DFS(Depth First Search) algorithm, leads results in logical order. 
 
-### Installing 
+### Getting Started 
+
+#### Installing 
 
 ##### System Requirements
 * NodeJS v10.0.0+
@@ -23,13 +26,13 @@ or with npm:
 npm install arachnid
 ```
 
-### Usage 
+#### Usage 
 
-##### Simple example
+#### Simple example
 ```js
     const Arachnid = require('arachnid');
 
-    const arachnidObj = new Arachnid().setDomain('https://www.example.com');
+    const arachnid = new Arachnid().setDomain('https://www.example.com');
 
     const crawlPage = await arachnidObj.traverse();
     console.log(crawlPage) // returns Map of crawled pages
@@ -54,7 +57,50 @@ npm install arachnid
      * }
      * /
 ```
-##### Events example
+
+The library designed Builder pattern to construct flexible `Arachnid` variables, let's start exploring those options 
+##### Domain setter (essential)
+Set the domain for crawling, must include URL scheme, e.g. https:// or http://
+```js
+    const arachnidObject = new Arachnid().setDomain('https://www.example.com');
+```
+
+##### Crawler Depth setter (Default = 1)
+Set the crawling depth, which means how many pages `Arachnid` from main domain 
+The higher value is the more more time it takes to complete
+```js
+    .setCrawlDepth(3);
+```
+
+##### Concurrency setter (Default = 1)
+Set number of concurent operations to run in parralel
+```js
+    .setConcurrency(3);
+```
+
+##### Puppeteer Arguments setter (Default = [])
+As method indicates, the library built on Puppeteer, which is `Additional arguments to pass to the browser instance`, [defaultArgs](https://github.com/puppeteer/puppeteer/blob/main/docs/api.md#puppeteerdefaultargsoptions) from Puppeteer documentation.
+
+Sample below to run `Arachnid` on UNIX with no need to install extra dependencies
+```js
+    .setPuppeteerArgs([
+        '--disable-gpu',
+        '--disable-dev-shm-usage',
+        '--disable-setuid-sandbox',
+        '--no-first-run',
+        '--no-sandbox',
+        '--no-zygote',
+        '--single-process'
+    ]);
+```
+
+##### Follow Subdomains setter (Default = false)
+Set flag to crawl subdomains e.g. `blog.example.com`
+```js
+    .shouldFollowSubdomains(true);
+```
+
+#### Events example
 ```js
     const Arachnid = require('arachnid');
 
