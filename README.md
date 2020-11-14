@@ -1,6 +1,6 @@
 # Arachnid
 
-A web crawler provides basic info for SEO purposes. 
+An open-source library, web crawler provides basic info for SEO purposes, like Screaming Frog SEO Spider Tool.
 The project build upon [Puppeteer](https://pptr.dev/) headless browser. 
 The project implemented in PHP, [Arachnid PHP](https://github.com/zrashwani/arachnid), the idea of making NodeJS version that the machanism of event loop in Nodejs give us faster performance. 
 
