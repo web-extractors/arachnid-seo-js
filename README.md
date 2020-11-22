@@ -32,7 +32,7 @@ npm install arachnid
 ```js
     const Arachnid = require('arachnid');
 
-    const arachnid = new Arachnid().setDomain('https://www.example.com');
+    const arachnid = new Arachnid('https://www.example.com');
 
     const crawlPage = await arachnidObj.traverse();
     console.log(crawlPage) // returns Map of crawled pages
@@ -59,23 +59,18 @@ npm install arachnid
 ```
 
 The library designed Builder pattern to construct flexible `Arachnid` variables, let's start exploring those options 
-##### Domain setter (essential)
-Set the domain for crawling, must include URL scheme, e.g. https:// or http://
-```js
-    const arachnidObject = new Arachnid().setDomain('https://www.example.com');
-```
 
 ##### Crawler Depth setter (Default = 1)
 Set the crawling depth, which means how many pages `Arachnid` from main domain 
 The higher value is the more more time it takes to complete
 ```js
-    .setCrawlDepth(3);
+    arachnid.setCrawlDepth(3);
 ```
 
 ##### Concurrency setter (Default = 1)
 Set number of concurent operations to run in parralel
 ```js
-    .setConcurrency(3);
+    arachnid.setConcurrency(3);
 ```
 
 ##### Puppeteer Arguments setter (Default = [])
@@ -83,7 +78,7 @@ As method indicates, the library built on Puppeteer, which is `Additional argume
 
 Sample below to run `Arachnid` on UNIX with no need to install extra dependencies
 ```js
-    .setPuppeteerArgs([
+    arachnid.setPuppeteerArgs([
         '--disable-gpu',
         '--disable-dev-shm-usage',
         '--disable-setuid-sandbox',
@@ -97,14 +92,14 @@ Sample below to run `Arachnid` on UNIX with no need to install extra dependencie
 ##### Follow Subdomains setter (Default = false)
 Set flag to crawl subdomains e.g. `blog.example.com`
 ```js
-    .shouldFollowSubdomains(true);
+    arachnid.shouldFollowSubdomains(true);
 ```
 
 #### Events example
 ```js
     const Arachnid = require('arachnid');
 
-    const arachnid = new Arachnid().setDomain('https://www.example.com/').setConcurrency(5).setCrawlDepth(2);
+    const arachnid = new Arachnid('https://www.example.com/').setConcurrency(5).setCrawlDepth(2);
 
     arachnid.on('results', resposne => console.log(response));
     arachnid.on('pageCrawlingSuccessed', pageResponse => processResponsePerPage(pageResponse));
