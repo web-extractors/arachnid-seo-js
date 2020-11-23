@@ -2,8 +2,7 @@ const Arachnid = require('../lib/Arachnid');
 
 async function crawl(domain, depth, concurrency) {
     const startTime = Date.now();
-    const arachnidObj = new Arachnid()
-        .setDomain(domain)
+    const arachnidObj = new Arachnid(domain)
         .setConcurrency(concurrency)
         .setCrawlDepth(depth)
         .shouldFollowSubdomains(true)
