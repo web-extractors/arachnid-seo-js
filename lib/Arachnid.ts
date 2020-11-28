@@ -1,12 +1,20 @@
 'use strict'
 
-const Events = require('events');
-const Puppeteer = require('puppeteer');
-const Queue = require('queue-fifo');
-const mainExtractor = require('./mainExtractor');
+import Events from 'events';
+import Puppeteer from 'puppeteer';
+import Queue from 'queue-fifo';
+import mainExtractor from './mainExtractor';
 
-class Arachnid extends Events {
-  constructor(domain) {
+export default class Arachnid extends Events.EventEmitter {
+  private domain: URL;
+  private params: Array<any>;
+  private maxDepth: number;
+  private concurrencyNum: number;
+  private followSubDomains: boolean;
+  private urlsToVisitQ: Queue<Page>;
+  private pagesProcessed: Map<URL, Item>;
+
+  constructor(domain: string) {
     super();
     if (!this._isValidHttpUrl(domain)) {
       throw Error('Please enter full website URL with protocol (http or https)');
@@ -15,16 +23,16 @@ class Arachnid extends Events {
     this.params = [];
     this.maxDepth = 1;
     this.concurrencyNum = 1;
-    this.urlsToVisitQ = new Queue();
-    this.pagesProcessed = new Map();
     this.followSubDomains = false;
+    this.urlsToVisitQ= new Queue();
+    this.pagesProcessed = new Map();
   }
 
   /**
    * @method setCrawlDepth
    * @param {number} depth - set concurrency number
    */ 
-  setCrawlDepth(depth) {
+  setCrawlDepth(depth: number) {
     this.maxDepth = depth;
     return this;
   }
@@ -33,7 +41,7 @@ class Arachnid extends Events {
    * @method setConcurrency 
    * @param {number} concurrencyNum - set pages to crawl depth
    */ 
-  setConcurrency(concurrencyNum) {
+  setConcurrency(concurrencyNum: number) {
     this.concurrencyNum = concurrencyNum;
     return this;
   }
@@ -43,7 +51,7 @@ class Arachnid extends Events {
    * @method setPuppeteerParameters
    * @param {Array} parameters - set list of arguments used by Puppeteer (this.args)
    */ 
-  setPuppeteerParameters(parameters) {
+  setPuppeteerParameters(parameters: Array<any>) {
     this.params = parameters;
     return this;
   }
@@ -52,12 +60,12 @@ class Arachnid extends Events {
    * @method shouldFollowSubdomains
    * @param {boolean} shouldFollow- enable or disable following links for subdomains of main domain 
    */
-  shouldFollowSubdomains(shouldFollow) {
+  shouldFollowSubdomains(shouldFollow: boolean) {
     this.followSubDomains = shouldFollow;
     return this;
   }
 
-  _isValidHttpUrl(string) {
+  _isValidHttpUrl(string: string) {
     let url;
 
     try {
@@ -75,40 +83,38 @@ class Arachnid extends Events {
       this.emit('info', `Getting next batch size from queue to process, current queue size ${this.urlsToVisitQ.size()}`);
       const urlsToProcess = this.getNextPageBatch();
       const pagesInfoResult = await this.processPageBatch(urlsToProcess);
-      pagesInfoResult.forEach(item => {
-        this.markItemAsProcessed(item);
-      })
+      pagesInfoResult.forEach(item => this.markItemAsProcessed(item));
     }
 
     this.emit('results', this.pagesProcessed);
     return this.pagesProcessed;
   }
 
-  markItemAsProcessed(item) {
+  markItemAsProcessed(item: Item) {
     this.pagesProcessed.set(item.url, item);
   }
 
-  getNextPageBatch() {
-    const urlsToVisit = new Set();
+  getNextPageBatch(): Set<Page> {
+    const urlsToVisit: Set<Page> = new Set();
     let i = 0;
     while (i < this.concurrencyNum && !this.urlsToVisitQ.isEmpty()) {
-      const currentPage = this.urlsToVisitQ.dequeue();
-      const normalizedCurrentLink = this.getNormalizedLink(currentPage.url);
-      if (this.shouldProcessPage(normalizedCurrentLink) && !urlsToVisit.has(normalizedCurrentLink)) {
-        urlsToVisit.add(currentPage);
+      const currentPage: Page | null = this.urlsToVisitQ.dequeue();
+      const normalizedCurrentLink: URL = this.getNormalizedLink(currentPage!.url);
+      if (this.shouldProcessPage(normalizedCurrentLink) && !urlsToVisit.has(currentPage!)) {
+        urlsToVisit.add(currentPage!);
         i++;
       }
     }
     return urlsToVisit;
   }
 
-  shouldProcessPage(normalizedPageUrl) {
+  shouldProcessPage(normalizedPageUrl: URL) {
     return !this.pagesProcessed.has(normalizedPageUrl);
   }
 
-  async processPageBatch(pagesToVisit) {
+  async processPageBatch(pagesToVisit: Set<Page>){
     const browser = await Puppeteer.launch({ headless: true, args: this.params });
-    const crawlPromises = [];
+    const crawlPromises: any[] = [];
     pagesToVisit.forEach(page => {
       try {
         crawlPromises.push(this.crawlPage(browser, page));
@@ -117,11 +123,11 @@ class Arachnid extends Events {
       }
     });
 
-    const results = [];
+    const results: any[] = [];
     await Promise.all(crawlPromises).then(allPagesData => {
       allPagesData.forEach(data => {
         const { url, response, extractedInfo, depth } = data;
-        let pageInfoResult = {
+        let pageInfoResult: any = {
           url,
           isInternal: this.isInternalLink(new URL(url)),
           statusCode: response.status(),
@@ -146,9 +152,9 @@ class Arachnid extends Events {
     return results;
   }
 
-  addChildrenToQueue(extractedInfo, depth) {
+  addChildrenToQueue(extractedInfo: any, depth: number) : void {
     if (depth < this.maxDepth) {
-      extractedInfo.links.forEach(link => {
+      extractedInfo.links.forEach((link: string) => {
         try {
           const extractedUrl = new URL(link);
           this.urlsToVisitQ.enqueue({ url: extractedUrl, depth: depth + 1 });
@@ -159,7 +165,7 @@ class Arachnid extends Events {
     }
   }
 
-  shouldExtractInfo(currentPageUrl, response) {
+  shouldExtractInfo(currentPageUrl: URL, response: any) : boolean {
     if (response.headers()['content-type'] && !response.headers()['content-type'].includes('text/html')) {
       this.emit("pageCrawlingSkipped", { url: currentPageUrl.toString(), reason: `Content is non html (${response.headers()['content-type']})` });
       return false;
@@ -173,23 +179,23 @@ class Arachnid extends Events {
     }
   }
 
-  isSameHost(currentPageUrl) {
+  isSameHost(currentPageUrl: URL) {
     return currentPageUrl.host === this.domain.host;
   }
 
-  isSubDomain(currentPageUrl) {
+  isSubDomain(currentPageUrl: URL) {
     const strippedMainHost = this.domain.hostname.replace("www.", "");
     return currentPageUrl.hostname.endsWith(`.${strippedMainHost}`);
   }
 
-  isInternalLink(currentPageUrl) {
+  isInternalLink(currentPageUrl: URL) {
     return this.isSameHost(currentPageUrl) || this.isSubDomain(currentPageUrl);
   }
 
-  async crawlPage(browser, singlePageLink) {
+  async crawlPage(browser: any, singlePageLink: Page) {
     const page = await browser.newPage();
     this.emit('pageCrawlingStarted', { url: singlePageLink.url.toString(), depth: singlePageLink.depth });
-    page.on('response', response => {
+    page.on('response', (response: any) => {
       const status = response.status()
       if ((status >= 300) && (status <= 399)) {
         const responseUrl = new URL(response.url());
@@ -225,9 +231,7 @@ class Arachnid extends Events {
     };
   }
 
-  getNormalizedLink(currentPageUrl) {
-    return currentPageUrl.href.replace(currentPageUrl.hash, "");
+  getNormalizedLink(currentPageUrl: URL) : URL {
+    return new URL(currentPageUrl.href.replace(currentPageUrl.hash, ""));
   }
 }
-
-module.exports = Arachnid;

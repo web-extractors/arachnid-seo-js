@@ -1,4 +1,4 @@
-const findImages = async (page) => await page.evaluate(() => Array.from(document.images, image => {
+const findImages = async (page: { url?: () => string; title?: () => any; evaluate?: any; }) => await page.evaluate(() => Array.from(document.images, image => {
   return {
     imageAlternateText: image.alt,
     imageSource: image.src,
@@ -6,8 +6,8 @@ const findImages = async (page) => await page.evaluate(() => Array.from(document
 }));
 
 const imageCache = new Map();
-const addImageStatusCode = async (page, images) => {
-  return await Promise.all(images.map(async image => {
+const addImageStatusCode = async (page: any, images: any) => {
+  return await Promise.all(images.map(async (image: { imageSource: any; }) => {
     const cacheKey = image.imageSource;
     if (imageCache.has(cacheKey)) {
         return imageCache.get(cacheKey);
@@ -24,4 +24,4 @@ const addImageStatusCode = async (page, images) => {
   }));
 }
 
-module.exports = { findImages, addImageStatusCode };
+export { findImages, addImageStatusCode };

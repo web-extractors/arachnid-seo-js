@@ -1,8 +1,8 @@
 'use strict'
 
-const { findImages, addImageStatusCode } = require('./helper');
+import { findImages, addImageStatusCode } from './helper';
 
-const extractor = async (page) => {
+const extractor = async (page: { url: () => string; title: () => any; }) => {
     const currentUrl = new URL(page.url());
     const extractPromises = [];
     extractPromises.push(page.title());
@@ -26,7 +26,7 @@ const extractor = async (page) => {
     };
 }
 
-const extractSelectorContents = async (page, selector) => {
+const extractSelectorContents = async (page: { url: () => string; title: () => any; }, selector: string) => {
     return new Promise(async (resolve, reject) => { 
         try {
             resolve(extractElemContents(page, selector)); 
@@ -36,14 +36,15 @@ const extractSelectorContents = async (page, selector) => {
     }); 
 };
 
-const extractMeta = async (page) => { 
+const extractMeta = async (page: { url?: () => string; title?: () => any; evaluate?: any; }) => { 
     return new Promise(async (resolve, reject) => {
         try {
             resolve(page.evaluate(() => 
                 Array.from(document.querySelectorAll('meta'))
                 .filter(element => {
                     const neededTags = ["title", "description", "keywords", "author"];
-                    return neededTags.includes(element.getAttribute("name"));
+                    const elementNameAttribute = element.getAttribute("name") || "";
+                    return neededTags.includes(elementNameAttribute);
                 }).map(element => {
                     return {name: element.getAttribute("name"), content: element.getAttribute("content")};
                 })
@@ -54,16 +55,16 @@ const extractMeta = async (page) => {
     });
 };
 
-const extractImages = async (page) => {
+const extractImages = async (page: { url: () => string; title: () => any; }) => {
     return new Promise(async (resolve, reject) => {
         try {
             const imagesWithStatusCode = await addImageStatusCode(page, await findImages(page));
             const imagesBroken = imagesWithStatusCode
-                .filter(image => image.statusCode > 399)
-                .map(image => image.imageSource);
+                .filter((image: any) => image.statusCode > 399)
+                .map((image: any) => image.imageSource);
             const imagesWithoutAlt = imagesWithStatusCode
-                .filter(image => image.imageAlternateText.length === 0)
-                .map(image => image.imageSource);
+                .filter((image: any) => image.imageAlternateText!.length === 0)
+                .map((image: any) => image.imageSource);
             resolve({broken: imagesBroken, missingAlt: imagesWithoutAlt});
         } catch(ex) {
             reject({error: ex});
@@ -71,21 +72,21 @@ const extractImages = async (page) => {
       });
 }  
 
-const extractElemContents = async (page, elemSelector) => {
-    return await page.evaluate((selector) => 
-        [...document.querySelectorAll(selector)].map(elem => elem.innerText), 
+const extractElemContents = async (page: any, elemSelector: string) => {
+    return await page.evaluate((selector: any) => 
+        [Array.from(document.querySelectorAll(selector))].map(elem => elem.innerText), 
         elemSelector);
 }
 
-const extractCanonical = async (page) => {
+const extractCanonical = async (page: { url?: () => string; title?: () => any; evaluate?: any; }) => {
     return await page.evaluate(() => { 
         const canonicalLinkElem = document.querySelector("link[rel='canonical']");
         return canonicalLinkElem != null ? canonicalLinkElem.getAttribute("href"): ""; 
     });
 }
 
-const extractLinks = async (page, baseUrl) => {
-    const links = await page.evaluate(() => [...document.querySelectorAll('a')]
+const extractLinks = async (page: any, baseUrl: string)  => {
+    const links: Array<string> = await page.evaluate(() => [Array.from(document.querySelectorAll('a'))]
                         .filter(elem => elem.getAttribute('rel') !== 'nofollow')
                         .map(elem => elem.getAttribute('href'))
                         .filter(Boolean) // filter null values
@@ -108,4 +109,4 @@ const extractLinks = async (page, baseUrl) => {
     return [...new Set(links)].map(link => (new URL(link, baseUrl).toString()));
 }
 
-module.exports = extractor;
+export default extractor;
