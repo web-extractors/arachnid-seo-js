@@ -34,7 +34,8 @@
   "homepage": "https://github.com/WebExtractors/Arachnid#readme",
   "dependencies": {
     "puppeteer": "5.2.1",
-    "queue-fifo": "^0.2.6"
+    "queue-fifo": "^0.2.6",
+    "robots-parser": "^2.1.1"
   },
   "devDependencies": {
     "jsdoc": "^3.6.6",
