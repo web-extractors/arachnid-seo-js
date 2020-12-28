@@ -9,7 +9,7 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "outDir": "./output",
+    "outDir": "./lib",
     "composite": true,
     "removeComments": true,
     "downlevelIteration": true,
@@ -22,10 +22,12 @@
     "noFallthroughCasesInSwitch": true,
 
     "moduleResolution": "node",
-    "baseUrl": "./lib",
+    "baseUrl": "src",
     "esModuleInterop": true,
     "allowUmdGlobalAccess": true,
   
     "forceConsistentCasingInFileNames": true
-  }
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "**/__tests__/*"]
 }

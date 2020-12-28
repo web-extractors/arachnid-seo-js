@@ -2,12 +2,18 @@
   "name": "arachnid",
   "version": "0.0.1",
   "description": "Analyse your site's SEO",
-  "main": "index.js",
+  "main": "lib/src/Arachnid.js",
+  "types": "lib/src/Arachnid.d.ts",
   "scripts": {
     "start": "node index.js",
+    "format": "prettier --write ./src/**/*.ts",
+    "lint": "tslint -p tsconfig.json",
     "build": "npx tsc",
     "docs": "jsdoc2md lib/*.js > api.md"
   },
+  "files": [
+    "lib/**/*"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/WebExtractors/Arachnid.git"
@@ -35,11 +41,14 @@
   "homepage": "https://github.com/WebExtractors/Arachnid#readme",
   "dependencies": {
     "@types/puppeteer": "^5.4.0",
-    "queue-fifo": "^0.2.6",
-    "typescript": "^4.1.2"
+    "queue-fifo": "^0.2.6"
   },
   "devDependencies": {
     "jsdoc": "^3.6.6",
-    "jsdoc-to-markdown": "^6.0.1"
+    "jsdoc-to-markdown": "^6.0.1",
+    "prettier": "^2.2.1",
+    "tslint": "^6.1.3",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^4.1.3"
   }
 }
