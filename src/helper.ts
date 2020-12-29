@@ -1,4 +1,5 @@
-const findImages = async (page) => await page.evaluate(() => Array.from(document.images, image => {
+// @ts-expect-error ts-migrate(2451) FIXME: Cannot redeclare block-scoped variable 'findImages... Remove this comment to see the full error message
+const findImages = async (page: any) => await page.evaluate(() => Array.from(document.images, image => {
   return {
     imageAlternateText: image.alt,
     imageSource: image.src,
@@ -6,8 +7,9 @@ const findImages = async (page) => await page.evaluate(() => Array.from(document
 }));
 
 const imageCache = new Map();
-const addImageStatusCode = async (page, images) => {
-  return await Promise.all(images.map(async image => {
+// @ts-expect-error ts-migrate(2451) FIXME: Cannot redeclare block-scoped variable 'addImageSt... Remove this comment to see the full error message
+const addImageStatusCode = async (page: any, images: any) => {
+  return await Promise.all(images.map(async (image: any) => {
     const cacheKey = image.imageSource;
     if (imageCache.has(cacheKey)) {
         return imageCache.get(cacheKey);
