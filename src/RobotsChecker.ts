@@ -1,13 +1,17 @@
 var robotsParser = require('robots-parser');
+// @ts-expect-error ts-migrate(2451) FIXME: Cannot redeclare block-scoped variable 'Puppeteer'... Remove this comment to see the full error message
 const Puppeteer = require('puppeteer');
 
+// @ts-expect-error ts-migrate(2451) FIXME: Cannot redeclare block-scoped variable 'RobotsChec... Remove this comment to see the full error message
 class RobotsChecker {
-    constructor(puppeteerParams) {
+    puppeteerParams: any;
+    robotsMap: any;
+    constructor(puppeteerParams: any) {
         this.puppeteerParams = puppeteerParams;
         this.robotsMap = new Map();
     }
 
-    async getOrCreateForDomain(domain) {
+    async getOrCreateForDomain(domain: any) {
         if (!this.robotsMap.has(domain.host)) {
             const robotsFileUrl = `${domain.origin}/robots.txt`;
             const robotsContents = await this.getRobotsFileText(`${domain.origin}/robots.txt`);
@@ -18,11 +22,11 @@ class RobotsChecker {
         return this.robotsMap.get(domain.host);
     }
 
-    createRobotsObject(robotsUrl, robotsContents) {
+    createRobotsObject(robotsUrl: any, robotsContents: any) {
         return robotsParser(robotsUrl, robotsContents);
     }
 
-    async getRobotsFileText(robotsUrlTxt) {
+    async getRobotsFileText(robotsUrlTxt: any) {
         const browser = await Puppeteer.launch({ headless: true, args: this.puppeteerParams });
         const robotsPage = await browser.newPage();
         const robotsResponse = await robotsPage.goto(robotsUrlTxt, { waitUntil: 'domcontentloaded', timeout: 0 });
@@ -37,7 +41,7 @@ class RobotsChecker {
         return robotsTxt;
     }
 
-    async isAllowed(pageUrlTxt, userAgent) {
+    async isAllowed(pageUrlTxt: any, userAgent: any) {
         const domainRobots = await this.getOrCreateForDomain(new URL(pageUrlTxt));
         return domainRobots.isAllowed(pageUrlTxt, userAgent);
     }

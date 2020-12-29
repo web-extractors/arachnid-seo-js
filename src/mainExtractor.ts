@@ -1,8 +1,9 @@
 'use strict'
 
+// @ts-expect-error ts-migrate(2451) FIXME: Cannot redeclare block-scoped variable 'findImages... Remove this comment to see the full error message
 const { findImages, addImageStatusCode } = require('./helper');
 
-const extractor = async (page) => {
+const extractor = async (page: any) => {
     const currentUrl = new URL(page.url());
     const extractPromises = [];
     extractPromises.push(page.title());
@@ -26,7 +27,7 @@ const extractor = async (page) => {
     };
 }
 
-const extractSelectorContents = async (page, selector) => {
+const extractSelectorContents = async (page: any, selector: any) => {
     return new Promise(async (resolve, reject) => { 
         try {
             resolve(extractElemContents(page, selector)); 
@@ -36,15 +37,17 @@ const extractSelectorContents = async (page, selector) => {
     }); 
 };
 
-const extractMeta = async (page) => { 
+const extractMeta = async (page: any) => { 
     return new Promise(async (resolve, reject) => {
         try {
             resolve(page.evaluate(() => 
                 Array.from(document.querySelectorAll('meta'))
                 .filter(element => {
                     const neededTags = ["title", "description", "keywords", "author", "robots"];
+                    // @ts-expect-error ts-migrate(2345) FIXME: Argument of type 'string | null' is not assignable... Remove this comment to see the full error message
                     return neededTags.includes(element.getAttribute("name"));
                 }).map(element => {
+                    // @ts-expect-error ts-migrate(2464) FIXME: A computed property name must be of type 'string',... Remove this comment to see the full error message
                     return {[element.getAttribute("name")]: element.getAttribute("content")};
                 })
             ));
@@ -54,16 +57,16 @@ const extractMeta = async (page) => {
     });
 };
 
-const extractImages = async (page) => {
+const extractImages = async (page: any) => {
     return new Promise(async (resolve, reject) => {
         try {
             const imagesWithStatusCode = await addImageStatusCode(page, await findImages(page));
             const imagesBroken = imagesWithStatusCode
-                .filter(image => image.statusCode > 399)
-                .map(image => image.imageSource);
+                .filter((image: any) => image.statusCode > 399)
+                .map((image: any) => image.imageSource);
             const imagesWithoutAlt = imagesWithStatusCode
-                .filter(image => image.imageAlternateText.length === 0)
-                .map(image => image.imageSource);
+                .filter((image: any) => image.imageAlternateText.length === 0)
+                .map((image: any) => image.imageSource);
             resolve({broken: imagesBroken, missingAlt: imagesWithoutAlt});
         } catch(ex) {
             reject({error: ex});
@@ -71,20 +74,21 @@ const extractImages = async (page) => {
       });
 }  
 
-const extractElemContents = async (page, elemSelector) => {
-    return await page.evaluate((selector) => 
-        [...document.querySelectorAll(selector)].map(elem => elem.innerText), 
+const extractElemContents = async (page: any, elemSelector: any) => {
+    // @ts-expect-error ts-migrate(2461) FIXME: Type 'NodeListOf<any>' is not an array type.
+    return await page.evaluate((selector: any) => [...document.querySelectorAll(selector)].map(elem => elem.innerText), 
         elemSelector);
 }
 
-const extractCanonical = async (page) => {
+const extractCanonical = async (page: any) => {
     return await page.evaluate(() => { 
         const canonicalLinkElem = document.querySelector("link[rel='canonical']");
         return canonicalLinkElem != null ? canonicalLinkElem.getAttribute("href"): ""; 
     });
 }
 
-const extractLinks = async (page, baseUrl) => {
+const extractLinks = async (page: any, baseUrl: any) => {
+    // @ts-expect-error ts-migrate(2461) FIXME: Type 'NodeListOf<HTMLAnchorElement>' is not an arr... Remove this comment to see the full error message
     const links = await page.evaluate(() => [...document.querySelectorAll('a')]
                         .filter(elem => elem.getAttribute('rel') !== 'nofollow')
                         .map(elem => elem.getAttribute('href'))
@@ -105,6 +109,7 @@ const extractLinks = async (page, baseUrl) => {
                             }
                             return currentLink.length > 0;
                         }));
+    // @ts-expect-error ts-migrate(2569) FIXME: Type 'Set<unknown>' is not an array type or a stri... Remove this comment to see the full error message
     return [...new Set(links)].map(link => {
         try {
             return new URL(link, baseUrl).toString()
