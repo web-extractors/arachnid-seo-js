@@ -1,9 +1,6 @@
-'use strict'
+import { findImages, addImageStatusCode } from './helper';
 
-// @ts-expect-error ts-migrate(2451) FIXME: Cannot redeclare block-scoped variable 'findImages... Remove this comment to see the full error message
-const { findImages, addImageStatusCode } = require('./helper');
-
-const extractor = async (page: any) => {
+export const extractor = async (page: any) => {
     const currentUrl = new URL(page.url());
     const extractPromises = [];
     extractPromises.push(page.title());
@@ -118,5 +115,3 @@ const extractLinks = async (page: any, baseUrl: any) => {
         }
     });
 }
-
-module.exports = extractor;
