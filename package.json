@@ -3,12 +3,12 @@
   "version": "0.0.1",
   "description": "Analyse your site's SEO",
   "main": "index.js",
-  "engines" : { 
-    "node" : ">=10.0.0" 
+  "engines": {
+    "node": ">=10.0.0"
   },
   "scripts": {
     "start": "node index.js",
-    "documentation": "jsdoc2md lib/*.js lib/**/*.js> API.md"
+    "docs": "jsdoc2md lib/*.js > api.md"
   },
   "repository": {
     "type": "git",
