@@ -1,96 +1,130 @@
 # Arachnid
 
-An open-source library, web crawler provides basic info for SEO purposes, like Screaming Frog SEO Spider Tool.
-The project build upon [Puppeteer](https://pptr.dev/) headless browser. 
-The project implemented in PHP, [Arachnid PHP](https://github.com/zrashwani/arachnid), the idea of making NodeJS version that the machanism of event loop in Nodejs give us faster performance. 
+An open-source web crawler that extracts internal links info for SEO auditing & optimization purposes.
+The project build upon [Puppeteer](https://pptr.dev/) headless browser. Inspired by [Arachnid PHP](https://github.com/zrashwani/arachnid) library.
 
 ## Features
 
-1. Simple NodeJS application.
-2. Crawl pages in variable depth provided by user.
-3. Get basic information helps website owners & SEO specialists enhance their site ranking.
-4. Event driven implemenation enable users of library to consume output in real-time.
-5. Implements DFS(Depth First Search) algorithm, leads results in logical order.
-6. parse meta tags: title, description, keywords, author & robots
+1. Simple NodeJS library with asynchronous crawling capability.
+2. Crawl site pages controlled by maximum depth or maximum result count.
+3. Implements BFS (Breadth First Search) algorithm, traversing pages ordered level by level.
+4. Event driven implementation enable users of library to consume output in real-time (crawling started/completed/skipped/failed ...etc.).
+5. Extracting the following SEO-related information for each page in a site: 
+   * Page titles, main heading H1 and sub heading H2 tag contents.
+   * Page status code/text, enabling to detect broken links (4xx/5xx).
+   * Meta tag information including: description, keywords, author, robots tags.
+   * Detect broken image resources and images with missing alt attribute.
+   * Extract page indexability status, and if page is not indexable detect the reason  (ex. blocked by robots.txt, client error, canonicalized)
+   * More SEO-oriented information will be added soon...
 
-### Getting Started
+## Getting Started
 
-#### Installing
+### Installing
 
-##### System Requirements
-
-* NodeJS v10.0.0+
-
-```sh
-yarn add arachnid
-```
-
-or with npm:
+NodeJS v10.0.0+ is required.
 
 ```sh
 npm install arachnid
 ```
 
-#### Usage
-
-#### Simple example
+### Basic Usage
 
 ```js
-    const Arachnid = require('arachnid');
+const Arachnid = require('arachnid');
+const cralwer = new Arachnid('https://www.example.com');
 
-    const arachnid = new Arachnid('https://www.example.com');
-
-    const crawlPage = await arachnidObj.traverse();
-    console.log(crawlPage) // returns Map of crawled pages
-    /**
-     * 
-     * Map(1) {
-     *   'https://www.example.com/' => {
-     *   pageUrl: 'https://www.example.com/',
-     *   statusCode: 200,
-     *   statusText: '',
-     *   contentType: 'text/html; charset=UTF-8',
-     *   depth: 1,
-     *   url: 'https://www.example.com/',
-     *   path: '/',
-     *   title: 'Example Domain',
-     *   h1: [ 'Example Domain' ],
-     *   h2: [],
-     *   meta: [],
-     *   images: { broken: [], missingAlt: [] },
-     *   canonicalUrl: ''
-     *   }
-     * }
-     * /
+const results = await cralwer
+                        .setCrawlDepth(2)
+                        .traverse();
+console.log(results) // returns Map of crawled pages
 ```
 
-The library designed Builder pattern to construct flexible `Arachnid` variables, let's start exploring those options
-
-##### Crawler Depth setter (Default = 1)
-
-Set the crawling depth, which means how many pages `Arachnid` from main domain 
-The higher value is the more more time it takes to complete
-
-```js
-    arachnid.setCrawlDepth(3);
+Sample output:
+```json
+[
+    [
+        "https://www.example.com/",
+        {
+            "url": "https://www.example.com/",
+            "isInternal": true,
+            "statusCode": 200,
+            "statusText": "",
+            "contentType": "text/html; charset=UTF-8",
+            "depth": 1,
+            "linksCount": 1,
+            "title": "Example Domain",
+            "h1": [
+                "Example Domain"
+            ],
+            "h2": [],
+            "meta": [],
+            "images": {
+                "broken": [],
+                "missingAlt": []
+            },
+            "canonicalUrl": "",
+            "indexability": true,
+            "indexabilityStatus": ""
+        }
+    ],
+    [
+        "https://www.iana.org/domains/reserved",
+        {
+            "url": "https://www.iana.org/domains/reserved",
+            "isInternal": false,
+            "statusCode": 200,
+            "statusText": "OK",
+            "contentType": "text/html; charset=UTF-8",
+            "depth": 2,
+            "indexability": true,
+            "indexabilityStatus": ""
+        }
+    ]
+]
 ```
 
-##### Concurrency setter (Default = 1)
+## Advanced Usage
 
-Set number of concurent operations to run in parralel
+The library designed using Builder pattern to construct flexible `Arachnid` crawling variables, as following:
+
+#### Setting maximum depth
+
+By default, crawling a single page depth is used (means it will crawl only one page), 
+to specify maximum links depth to crawl, `setCrawlDepth` method can be used:
 
 ```js
-    arachnid.setConcurrency(3);
+cralwer.setCrawlDepth(3);
 ```
 
-##### Puppeteer Arguments setter (Default = [])
+#### Setting maximum results number
 
-As method indicates, the library built on Puppeteer, which is `Additional arguments to pass to the browser instance`, [defaultArgs](https://github.com/puppeteer/puppeteer/blob/main/docs/api.md#puppeteerdefaultargsoptions) from Puppeteer documentation.
-
-Sample below to run `Arachnid` on UNIX with no need to install extra dependencies
+To specify the maximum results to be crawled, `setMaxResultsNum` method can be used:
 
 ```js
-    arachnid.setPuppeteerArgs([
+cralwer.setMaxResultsNum(100);
+```
+
+#### Setting number of concurrent requests
+
+To improve the speed of the crawl the package concurrently crawls 5 urls by default,
+to change that concurrency value, use `setConcurrency` method.
+
+> That will modify number of pages/tabs created by puppeteer at the same time, increasing it to large number may cause some memory impact.
+
+```js
+cralwer.setConcurrency(10);
+```
+
+#### Setting Puppeteer Arguments
+
+To pass additional arguments to puppeteer browser instance, use `setPuppeteerArgs` method.
+ 
+> Refer to puppeteeer documentation for more information about [defaultArgs](https://github.com/puppeteer/puppeteer/blob/main/docs/api.md#puppeteerdefaultargsoptions).
+
+Sample below to run `Arachnid` on UNIX with no need to install extra dependencies:
+
+```js
+    cralwer.setPuppeteerArgs([
         '--disable-gpu',
         '--disable-dev-shm-usage',
         '--disable-setuid-sandbox',
@@ -101,49 +135,84 @@ Sample below to run `Arachnid` on UNIX with no need to install extra dependencie
     ]);
 ```
 
-##### Follow Subdomains setter (Default = false)
+#### Enable following subdomains links
 
-Set flag to crawl subdomains e.g. `blog.example.com`
+By default, only crawling and extracting information of internal links with the same domain is enabled. 
+To enable following subdomain links, `shouldFollowSubdomains` can be used:
 
 ```js
-    arachnid.shouldFollowSubdomains(true);
+cralwer.shouldFollowSubdomains(true);
 ```
 
-#### Events example
+#### Ignoring Robots.txt rules
 
+By default, the crawler will respect robots.txt allow/disallow results, to ignore robots rules, use `ignoreRobots` method:
 ```js
-    const Arachnid = require('arachnid');
+cralwer.ignoreRobots();
+```
 
-    const arachnid = new Arachnid('https://www.example.com/').setConcurrency(5).setCrawlDepth(2);
+### Using Events
 
-    arachnid.on('results', resposne => console.log(response));
-    arachnid.on('pageCrawlingSuccessed', pageResponse => processResponsePerPage(pageResponse));
-    arachnid.on('pageCrawlingFailed', pageFailed => handleFailedCrwaling(pageFailed));
-    // See https://github.com/WebExtractors/Arachnid#Events for full list of events emitted
+Arachnid provides methods to track crawling activity progress, by emitting various events as below:
+
+#### Events example
+```js
+const Arachnid = require('arachnid');
+const crawler = new Arachnid('https://www.example.com/').setConcurrency(5).setCrawlDepth(2);
+
+crawler.on('results', resposne => console.log(response))
+       .on('pageCrawlingSuccessed', pageResponse => processResponsePerPage(pageResponse))
+       .on('pageCrawlingFailed', pageFailed => handleFailedCrwaling(pageFailed));
+       // See https://github.com/WebExtractors/Arachnid#Events for full list of events emitted
 ```
 
 [Full examples](https://github.com/WebExtractors/Arachnid/tree/master/examples)
 
-### Events
+#### List of events:
 
-|         Events         |                    Description                             |           Response             |
-|:---------------------: |:---------------------------------------------------------:    |------------------------------- |
-|  pageCrawlingStarted   |            Indicator of start crawling a page              |{url(String), depth(int)}        |
-| pageCrawlingSuccessed  |           Indicator of successful crawling page               |{url(String), statusCode(int)}  |
-|  pageCrawlingSkipped      | Indicator of skiping a page (if follow domains was disabled) |{url(String), statusCode(int)}  |
-|   pageCrawlingFailed   |            Indicator of failure crawling a page              |{url(String), statusCode(int)}  |
-|          info           |             Informative generic message                       |(String)                        |
-|         results           |             Returns all collected data                       |Map(URL => {pageUrl(String), statusCode(int),statusText(String),contentType(String),depth(int),url(String),path(String),title(String),h1(Array(String)),h2(Array(String)), meta(Array(Object)), Images(Objecta):{broken(Array(String),missingAlt(Array(String))),canonicalUrl(String)}})             |
+##### event: 'info'
+  * Emitted when a general activity take place like: getting next page batch to process.
+  * Payload: <InformativeMessage(String)>
 
-### Change log
+##### event: 'error'
+  * Emitted when an error occurs while processing link or batch of links, ex. URL with invalid hostname.
+  * Payload: <ErrorMessage(String)>
+  
+##### event: 'pageCrawlingStarted':
+  * Emitted when crawling of a page start (puppeteer open tab for page URL).
+  * Payload:  <{url(String), depth(int)}>
+
+##### event: 'pageCrawlingSuccessed':
+  * Emitted when a success response received for Url (2xx/3xx).
+  * Payload:  <{url(String), statusCode(int)}>  
+
+##### event: 'pageCrawlingFailed':
+  * Emitted when a failure response received for Url (4xx/5xx).
+  * Payload:  <{url(String), statusCode(int)}>   
+
+##### event: 'pageCrawlingFinished':
+  * Emitted when page url marked as processed after extracting all information and adding it to results map.
+  * Payload:  <{url(String), PageResultInfo}> 
+
+##### event: 'pageCrawlingSkipped':
+  * Emitted when crawling or extracting page info skipped due to non-html content, invalid or external link.
+  * Payload:  <{url(String), reason(String)}>  
+
+##### event: 'results':
+  * Emitted when crawling all links matching parameters completed and return all links information.
+  * Payload:  <Map<{url(String), PageResultInfo}>>  
+
+
+
+## Changelog
 
 We are still in Beta version :new_moon:
 
-### Contributing
+## Contributing
 
-Feel free to raise ticket under Issue tab or Submit PRs for enhancements. 
+Feel free to raise ticket under Issue tab or Submit PRs for any new bug fix/feature/enhancement. 
 
-### Authors
+## Authors
 
 * Zeid Rashwani <http://zrashwani.com>
 * Ahmad Khasawneh <https://github.com/AhmadKhasanweh>
