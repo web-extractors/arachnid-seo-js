@@ -174,7 +174,8 @@ crawler.on('results', resposne => console.log(response))
        // See https://github.com/WebExtractors/Arachnid#Events for full list of events emitted
 ```
 
-See [Full examples](https://github.com/WebExtractors/Arachnid/tree/master/examples) for full lost of events emitted.
+See [Full examples](https://github.com/WebExtractors/Arachnid/tree/master/examples) for full li
+st of events emitted.
 
 #### List of events
 
