@@ -8,7 +8,7 @@
   },
   "scripts": {
     "start": "node index.js",
-    "docs": "jsdoc2md lib/*.js > api.md"
+    "document": "jsdoc2md lib/*.js > API.md"
   },
   "repository": {
     "type": "git",
