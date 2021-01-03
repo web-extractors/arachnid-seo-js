@@ -2,16 +2,17 @@
 import robotsParser from 'robots-parser';
 import Puppeteer from 'puppeteer';
 import { URL } from 'url';
+import { RobotsParser } from './types/robots-parser';
 
 export default class RobotsChecker {
   puppeteerParams: string[];
-  robotsMap: Map<string, any>;
+  robotsMap: Map<string, RobotsParser>;
   constructor(puppeteerParams: string[]) {
     this.puppeteerParams = puppeteerParams;
     this.robotsMap = new Map();
   }
 
-  private async getOrCreateForDomain(domain: URL): Promise<any> {
+  private async getOrCreateForDomain(domain: URL): Promise<RobotsParser> {
     if (!this.robotsMap.has(domain.host)) {
       const robotsFileUrl = `${domain.origin}/robots.txt`;
       const robotsContents = await this.getRobotsFileText(`${domain.origin}/robots.txt`);
@@ -19,10 +20,10 @@ export default class RobotsChecker {
       this.robotsMap.set(domain.host, robotsParserObject);
     }
 
-    return this.robotsMap.get(domain.host);
+    return this.robotsMap.get(domain.host) as RobotsParser;
   }
 
-  private createRobotsObject(robotsUrl: string, robotsContents: string): any {
+  private createRobotsObject(robotsUrl: string, robotsContents: string): RobotsParser {
     return robotsParser(robotsUrl, robotsContents);
   }
 

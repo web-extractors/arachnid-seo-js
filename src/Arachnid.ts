@@ -5,6 +5,14 @@ import { URL } from 'url';
 
 import { extractor as mainExtractor } from './mainExtractor';
 import RobotsChecker from './RobotsChecker';
+import {
+  CrawlPageResult,
+  ErrorResponse,
+  ExtractedInfo,
+  IndexabilityInfo,
+  ResultInfo,
+  UrlWithDepth,
+} from './types/arachnid';
 
 export default class Arachnid extends EventEmitter {
   private domain: URL;
@@ -12,15 +20,15 @@ export default class Arachnid extends EventEmitter {
   private maxDepth?: number;
   private maxResultsNum?: number;
   private concurrencyNum: number;
-  private urlsToVisitQ: Queue<unknown>;
-  private pagesProcessed: Map<string, any>;
+  private urlsToVisitQ: Queue<UrlWithDepth>;
+  private pagesProcessed: Map<string, ResultInfo>;
   private followSubDomains: boolean;
   private robotsIsIgnored: boolean;
   private robotsChecker: RobotsChecker | undefined;
 
-  constructor(domain: any) {
+  constructor(domain: string) {
     super();
-    if (!this._isValidHttpUrl(domain)) {
+    if (!this.isValidHttpUrl(domain)) {
       throw Error('Please enter full website URL with protocol (http or https)');
     }
     this.domain = new URL(domain);
@@ -41,7 +49,7 @@ export default class Arachnid extends EventEmitter {
     this.maxDepth = depth;
     return this;
   }
-  
+
   /**
    * @method setMaxResultsNum
    * @description set maximum links count to be traversed/returned
@@ -51,7 +59,7 @@ export default class Arachnid extends EventEmitter {
     this.maxResultsNum = maxResultsNum;
     return this;
   }
-  
+
   /**
    * @method setConcurrency
    * @description set number of urls to crawl concurrenctly at same time
@@ -90,7 +98,7 @@ export default class Arachnid extends EventEmitter {
     return this;
   }
 
-  private _isValidHttpUrl(urlString: string) {
+  private isValidHttpUrl(urlString: string) {
     let url;
     try {
       url = new URL(urlString);
@@ -102,7 +110,7 @@ export default class Arachnid extends EventEmitter {
 
   public async traverse() {
     this.robotsChecker = new RobotsChecker(this.params);
-    if (typeof this.maxDepth == 'undefined' && typeof this.maxResultsNum == 'undefined') {
+    if (typeof this.maxDepth === 'undefined' && typeof this.maxResultsNum === 'undefined') {
       this.maxDepth = 1;
     }
     this.urlsToVisitQ.enqueue({ url: this.domain, depth: 1 });
@@ -113,8 +121,7 @@ export default class Arachnid extends EventEmitter {
       );
       const urlsToProcess = this.getNextPageBatch();
       const pagesInfoResults = await this.processPageBatch(urlsToProcess);
-      for (let i = 0; i < pagesInfoResults.length; i++) {
-        const item = pagesInfoResults[i];
+      for (const item of pagesInfoResults) {
         this.markItemAsProcessed(item);
         if (this.isExceedingMaxResults()) {
           this.emit('info', `Max results number of ${this.maxResultsNum} has been processed, stopping the traverse`);
@@ -126,20 +133,20 @@ export default class Arachnid extends EventEmitter {
     return this.pagesProcessed;
   }
 
-  private markItemAsProcessed(item: any) {
+  private markItemAsProcessed(item: ResultInfo) {
     if (!this.isExceedingMaxResults()) {
       this.pagesProcessed.set(item.url, item);
       this.emit('pageCrawlingFinished', { url: item.url, pageInfoResult: item });
     }
   }
 
-  private getNextPageBatch(): Set<any> {
-    const urlsToVisit = new Set();
+  private getNextPageBatch(): Set<UrlWithDepth> {
+    const urlsToVisit = new Set<UrlWithDepth>();
     let i = 0;
     while (i < this.concurrencyNum && !this.urlsToVisitQ.isEmpty()) {
-      const currentPage = this.urlsToVisitQ.dequeue();
+      const currentPage = this.urlsToVisitQ.dequeue() as UrlWithDepth;
       const normalizedCurrentLink = this.getNormalizedLink(currentPage.url);
-      if (this.shouldProcessPage(normalizedCurrentLink) && !urlsToVisit.has(normalizedCurrentLink)) {
+      if (this.shouldProcessPage(normalizedCurrentLink)) {
         urlsToVisit.add(currentPage);
         i++;
       }
@@ -153,7 +160,7 @@ export default class Arachnid extends EventEmitter {
 
   private async processPageBatch(pagesToVisit: any): Promise<any[]> {
     const browser = await Puppeteer.launch({ headless: true, args: this.params });
-    const crawlPromises: any = [];
+    const crawlPromises: Promise<CrawlPageResult>[] = [];
     pagesToVisit.forEach((page: any) => {
       try {
         crawlPromises.push(this.crawlPage(browser, page));
@@ -161,27 +168,28 @@ export default class Arachnid extends EventEmitter {
         this.emit('error', `Failed to crawl page, error:${error}`);
       }
     });
-    const results: any = [];
+    const results: ResultInfo[] = [];
     await Promise.all(crawlPromises)
       .then((allPagesData) => {
-        allPagesData.forEach((data) => {
-          // @ts-expect-error ts-migrate(2339) FIXME: Property 'url' does not exist on type 'unknown'.
+        allPagesData.forEach((data: CrawlPageResult) => {
           const { url, response, extractedInfo, depth } = data;
-          let pageInfoResult = {
+          let pageInfoResult: ResultInfo = {
             url,
-            isInternal: response.status() != 0 ? this.isInternalLink(new URL(url)) : false,
-            ...this.getPageInfoResponse(response),
+            isInternal: response !== null && response.status() !== 0 ? this.isInternalLink(new URL(url)) : false,
+            statusCode: response !== null ? response.status() : 0,
+            statusText: response !== null ? response.statusText() : '',
+            contentType: response !== null && response.headers() !== null ? response.headers()['content-type'] : null,
+            robotsHeader: response !== null && response.headers() !== null ? response.headers()['x-robots-tag'] : null,
             depth,
           };
           if (extractedInfo) {
-            (pageInfoResult as any).linksCount = extractedInfo.links.length;
+            pageInfoResult.linksCount = extractedInfo.links ? extractedInfo.links.length : 0;
             this.addChildrenToQueue(extractedInfo, depth);
             delete extractedInfo.links;
             pageInfoResult = { ...pageInfoResult, ...extractedInfo };
           }
           const indexableInfo = this.extractIndexability(pageInfoResult);
-          (pageInfoResult as any).indexability = indexableInfo.isIndexable;
-          (pageInfoResult as any).indexabilityStatus = indexableInfo.indexabilityStatus;
+          pageInfoResult = { ...pageInfoResult, ...indexableInfo };
           results.push(pageInfoResult);
         });
       })
@@ -194,7 +202,7 @@ export default class Arachnid extends EventEmitter {
   }
 
   private addChildrenToQueue(extractedInfo: any, depth: number) {
-    const depthInLimit = typeof this.maxDepth == 'undefined' || depth < this.maxDepth;
+    const depthInLimit = typeof this.maxDepth === 'undefined' || depth < this.maxDepth;
     let i = 0;
     while (depthInLimit && i < extractedInfo.links.length) {
       const urlString = extractedInfo.links[i++];
@@ -202,22 +210,22 @@ export default class Arachnid extends EventEmitter {
         continue;
       }
       const resultsNumInLimit =
-        typeof this.maxResultsNum == 'undefined' ||
+        typeof this.maxResultsNum === 'undefined' ||
         this.pagesProcessed.size + this.urlsToVisitQ.size() < this.maxResultsNum;
       if (!resultsNumInLimit) {
         break;
       }
       try {
         const url = new URL(urlString);
-        this.urlsToVisitQ.enqueue({ url: url, depth: depth + 1 });
+        this.urlsToVisitQ.enqueue({ url, depth: depth + 1 });
       } catch (ex) {
         this.emit('pageCrawlingSkipped', { url: urlString, reason: ex.toString() });
-        const invalidURLResults = {
+        const invalidURLResults: ResultInfo = {
           url: urlString,
           isInternal: false,
           statusCode: 0,
           statusText: 'Invalid URL',
-          indexability: false,
+          isIndexable: false,
           indexabilityStatus: 'Invalid URL',
           depth: depth + 1,
         };
@@ -226,7 +234,7 @@ export default class Arachnid extends EventEmitter {
     }
   }
 
-  private shouldExtractInfo(currentPageUrl: URL, response: Response): boolean {
+  private shouldExtractInfo(currentPageUrl: URL, response: Response | ErrorResponse): boolean {
     if (response.headers()['content-type'] && !response.headers()['content-type'].includes('text/html')) {
       this.emit('pageCrawlingSkipped', {
         url: currentPageUrl.toString(),
@@ -243,7 +251,7 @@ export default class Arachnid extends EventEmitter {
     }
   }
 
-  private isSameHost(currentPageUrl: Url): boolean {
+  private isSameHost(currentPageUrl: URL): boolean {
     return currentPageUrl.host === this.domain.host;
   }
 
@@ -256,7 +264,7 @@ export default class Arachnid extends EventEmitter {
     return this.isSameHost(currentPageUrl) || this.isSubDomain(currentPageUrl);
   }
 
-  private extractIndexability(pageInfoResult: any): any {
+  private extractIndexability(pageInfoResult: ResultInfo): IndexabilityInfo {
     let isIndexable = true;
     let indexabilityStatus = '';
     if (pageInfoResult.robotsHeader && pageInfoResult.robotsHeader.includes('noindex')) {
@@ -265,7 +273,7 @@ export default class Arachnid extends EventEmitter {
     } else if (pageInfoResult.meta && pageInfoResult.meta.robots && pageInfoResult.meta.robots.includes('noindex')) {
       isIndexable = false;
       indexabilityStatus = 'noindex';
-    } else if (pageInfoResult.statusCode == 0) {
+    } else if (pageInfoResult.statusCode === 0) {
       isIndexable = false;
       indexabilityStatus = pageInfoResult.statusText;
     } else if (pageInfoResult.statusCode >= 400) {
@@ -281,7 +289,7 @@ export default class Arachnid extends EventEmitter {
     return { isIndexable, indexabilityStatus };
   }
 
-  private async crawlPage(browser: Browser, singlePageLink: any): Promise<any> {
+  private async crawlPage(browser: Browser, singlePageLink: UrlWithDepth): Promise<CrawlPageResult> {
     const singlePageUrl = singlePageLink.url.toString();
     const userAgent = await browser.userAgent();
     const isAllowedByRobotsTxt = await this.isAllowedByRobotsTxt(singlePageUrl, userAgent);
@@ -291,19 +299,19 @@ export default class Arachnid extends EventEmitter {
     }
     const page = await browser.newPage();
     const redirectChain = [singlePageUrl];
-    page.on('response', async (response: any) => {
-      if ([301, 302].includes(response.status()) && redirectChain.includes(response.url())) {
-        redirectChain.push(response.headers()['location']);
-        const isAllowedByRobotsTxt = await this.isAllowedByRobotsTxt(response.url(), userAgent);
-        if (!isAllowedByRobotsTxt) {
-          this.markItemAsProcessed(this.getRobotsBlockedResult(response.url(), singlePageLink.depth));
+    page.on('response', async (subResponse: any) => {
+      if ([301, 302].includes(subResponse.status()) && redirectChain.includes(subResponse.url())) {
+        redirectChain.push(subResponse.headers().location);
+        const subrequestRobotsAllowed = await this.isAllowedByRobotsTxt(subResponse.url(), userAgent);
+        if (!subrequestRobotsAllowed) {
+          this.markItemAsProcessed(this.getRobotsBlockedResult(subResponse.url(), singlePageLink.depth));
         } else {
-          this.markResponseAsVisited(response, singlePageLink.depth);
+          this.markResponseAsVisited(subResponse, singlePageLink.depth);
         }
       }
     });
     this.emit('pageCrawlingStarted', { url: singlePageUrl, depth: singlePageLink.depth });
-    const response: Response = await page
+    const response: Response | ErrorResponse | null = await page
       .goto(this.getNormalizedLink(singlePageLink.url), { waitUntil: 'domcontentloaded', timeout: 0 })
       .catch((error: any) => {
         if (error.stack.includes('ERR_NAME_NOT_RESOLVED')) {
@@ -315,8 +323,8 @@ export default class Arachnid extends EventEmitter {
         }
       });
     let extractedInfo;
-    if (response.status() > 399 || response.status() === 0) {
-      this.emit('pageCrawlingFailed', { url: singlePageUrl, statusCode: response.status() });
+    if (response === null || response.status() > 399 || response.status() === 0) {
+      this.emit('pageCrawlingFailed', { url: singlePageUrl, statusCode: response !== null ? response.status() : 0 });
     } else {
       this.emit('pageCrawlingSuccessed', { url: singlePageUrl, statusCode: response.status() });
       if (this.shouldExtractInfo(singlePageLink.url, response)) {
@@ -333,7 +341,7 @@ export default class Arachnid extends EventEmitter {
       }
     });
     return {
-      url: response.url(),
+      url: response !== null ? response.url() : singlePageUrl,
       response,
       extractedInfo,
       depth: singlePageLink.depth,
@@ -344,18 +352,19 @@ export default class Arachnid extends EventEmitter {
     const responseUrl = new URL(response.url());
     const pageUrl = this.getNormalizedLink(responseUrl);
     if (!this.pagesProcessed.has(pageUrl)) {
-      const resultItem = {
+      const resultItem: ResultInfo = {
         url: pageUrl,
         statusCode: response.status(),
         statusText: response.statusText(),
         contentType: response.headers()['content-type'],
         isInternal: this.isInternalLink(responseUrl),
+        robotsHeader: null,
         depth,
       };
       if ([301, 302].includes(response.status())) {
-        (resultItem as any).redirectUrl = response.headers()['location'];
-        (resultItem as any).indexability = false;
-        (resultItem as any).indexabilityStatus = 'Redirected';
+        resultItem.redirectUrl = response.headers().location;
+        resultItem.isIndexable = false;
+        resultItem.indexabilityStatus = 'Redirected';
       }
       this.markItemAsProcessed(resultItem);
     }
@@ -364,7 +373,7 @@ export default class Arachnid extends EventEmitter {
   private getRobotsBlockedResult(singlePageUrl: string, depth: number): any {
     const response = new Response(null, {
       status: 0,
-      statusText: 'Blocked by robots.txt'
+      statusText: 'Blocked by robots.txt',
     });
     return {
       url: singlePageUrl,
@@ -373,21 +382,19 @@ export default class Arachnid extends EventEmitter {
     };
   }
 
-  private getPageInfoResponse(response: Response): any {
+  private getErrorResponse(singlePageUrl: string, reason: string): ErrorResponse {
     return {
-      statusCode: response.status(),
-      statusText: response.statusText(),
-      contentType: response.headers()['content-type'],
-      robotsHeader: response.headers()['x-robots-tag'],
+      url: () => singlePageUrl,
+      status: () => 0,
+      statusText: () => reason,
+      headers: () => {
+        return {};
+      },
     };
   }
 
-  private getErrorResponse(singlePageUrl: string, reason: string): Response {
-    return Response.new
-  }
-  
   private async isAllowedByRobotsTxt(singlePageUrl: any, userAgent: string): Promise<boolean> {
-    if (this.robotsIsIgnored || typeof this.robotsChecker == 'undefined') {
+    if (this.robotsIsIgnored || typeof this.robotsChecker === 'undefined') {
       return true;
     }
 
@@ -397,13 +404,13 @@ export default class Arachnid extends EventEmitter {
         this.emit('error', `cannot evaluate robots.txt related to url: ${singlePageUrl}, exception: ${ex.toString()}`),
       );
   }
-  
+
   private getNormalizedLink(currentPageUrl: URL): string {
     const href = currentPageUrl.href;
-    return currentPageUrl.hash!==null?href.replace(currentPageUrl.hash, ''): href;
+    return currentPageUrl.hash !== null ? href.replace(currentPageUrl.hash, '') : href;
   }
 
   private isExceedingMaxResults(): boolean {
-    return typeof this.maxResultsNum != 'undefined' && this.pagesProcessed.size >= this.maxResultsNum;
+    return typeof this.maxResultsNum !== 'undefined' && this.pagesProcessed.size >= this.maxResultsNum;
   }
 }
