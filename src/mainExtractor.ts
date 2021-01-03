@@ -1,6 +1,10 @@
+import { Page } from 'puppeteer';
+import { ExtractedInfo, ImageInfo } from './types/mainExtractor';
 import { findImages, addImageStatusCode } from './helper';
+import { ImageElementAttributesWithStatusCode } from './types/helper';
 
-export const extractor = async (page: any) => {
+
+export const extractor = async (page: Page): Promise<ExtractedInfo> => {
     const currentUrl = new URL(page.url());
     const extractPromises = [];
     extractPromises.push(page.title());
@@ -24,28 +28,26 @@ export const extractor = async (page: any) => {
     };
 }
 
-const extractSelectorContents = async (page: any, selector: any) => {
-    return new Promise(async (resolve, reject) => { 
+const extractSelectorContents = async (page: Page, selector: string): Promise<string[]> => {
+    return new Promise(async (resolve, reject) => {
         try {
-            resolve(extractElemContents(page, selector)); 
+            resolve(extractElemContents(page, selector));
         } catch (error) {
             reject({errorInfo: error.message});
         }
     }); 
 };
 
-const extractMeta = async (page: any) => { 
+const extractMeta = async (page: Page): Promise<any> => { 
     return new Promise(async (resolve, reject) => {
         try {
             resolve(page.evaluate(() => 
-                Array.from(document.querySelectorAll('meta'))
+                [...document.querySelectorAll('meta')]
                 .filter(element => {
-                    const neededTags = ["title", "description", "keywords", "author", "robots"];
-                    // @ts-expect-error ts-migrate(2345) FIXME: Argument of type 'string | null' is not assignable... Remove this comment to see the full error message
-                    return neededTags.includes(element.getAttribute("name"));
+                    const metaTags = ['title', 'description', 'keywords', 'author', 'robots'];
+                    return metaTags.includes(element.getAttribute('name')??'');
                 }).map(element => {
-                    // @ts-expect-error ts-migrate(2464) FIXME: A computed property name must be of type 'string',... Remove this comment to see the full error message
-                    return {[element.getAttribute("name")]: element.getAttribute("content")};
+                    return {[element.getAttribute('name')!]: element.getAttribute('content')};
                 })
             ));
         } catch(ex) {
@@ -54,42 +56,39 @@ const extractMeta = async (page: any) => {
     });
 };
 
-const extractImages = async (page: any) => {
-    return new Promise(async (resolve, reject) => {
+const extractImages = async (page: Page): Promise<ImageInfo> => {
+    return new Promise<ImageInfo>(async (resolve, reject) => {
         try {
             const imagesWithStatusCode = await addImageStatusCode(page, await findImages(page));
-            const imagesBroken = imagesWithStatusCode
-                .filter((image: any) => image.statusCode > 399)
-                .map((image: any) => image.imageSource);
-            const imagesWithoutAlt = imagesWithStatusCode
-                .filter((image: any) => image.imageAlternateText.length === 0)
-                .map((image: any) => image.imageSource);
-            resolve({broken: imagesBroken, missingAlt: imagesWithoutAlt});
+            const brokenImages: string[] = imagesWithStatusCode
+                .filter((image: ImageElementAttributesWithStatusCode) => image.statusCode > 399)
+                .map((image: ImageElementAttributesWithStatusCode): string => image.imageSource);
+            const imagesWithoutAlt: string[] = imagesWithStatusCode
+                .filter((image: ImageElementAttributesWithStatusCode) => image.imageAlternateText.length === 0)
+                .map((image: ImageElementAttributesWithStatusCode): string => image.imageSource);
+                const toResolve: ImageInfo = {broken: brokenImages, missingAlt: imagesWithoutAlt}
+            resolve(toResolve);
         } catch(ex) {
             reject({error: ex});
         }
       });
 }  
 
-const extractElemContents = async (page: any, elemSelector: any) => {
-    // @ts-expect-error ts-migrate(2461) FIXME: Type 'NodeListOf<any>' is not an array type.
-    return await page.evaluate((selector: any) => [...document.querySelectorAll(selector)].map(elem => elem.innerText), 
-        elemSelector);
-}
+const extractElemContents = async (page: Page, elemSelector: string): Promise<string[]> => await page
+    .evaluate((selector: string) => [...document.querySelectorAll(selector)]
+        .map(elem => elem.innerText)
+    ,elemSelector);
 
-const extractCanonical = async (page: any) => {
-    return await page.evaluate(() => { 
-        const canonicalLinkElem = document.querySelector("link[rel='canonical']");
-        return canonicalLinkElem != null ? canonicalLinkElem.getAttribute("href"): ""; 
-    });
-}
+const extractCanonical = async (page: Page): Promise<string> => await page
+    .evaluate(() => document
+        .querySelector("link[rel='canonical']")?.getAttribute('href') ?? ''
+    );
 
-const extractLinks = async (page: any, baseUrl: any) => {
-    // @ts-expect-error ts-migrate(2461) FIXME: Type 'NodeListOf<HTMLAnchorElement>' is not an arr... Remove this comment to see the full error message
-    const links = await page.evaluate(() => [...document.querySelectorAll('a')]
+const extractLinks = async (page: Page, baseUrl: string): Promise<(URL | string)[]> => {
+    const links: string[] = await page.evaluate(() => [...document.querySelectorAll('a')]
                         .filter(elem => elem.getAttribute('rel') !== 'nofollow')
+                        .filter(elem => elem.getAttribute('href'))
                         .map(elem => elem.getAttribute('href'))
-                        .filter(Boolean) // filter null values
                         .filter(link => {
                             const stopRegexList = [
                                 /^javascript\:.*$/g,
@@ -98,15 +97,14 @@ const extractLinks = async (page: any, baseUrl: any) => {
                                 /^skype\:.*$/g,
                                 /^fax\:.*$/g,
                             ];
-                            return !stopRegexList.some(regex => link.match(regex));
+                            return !stopRegexList.some(regex => link!.match(regex));
                         })
                         .filter(currentLink => {
-                            if (currentLink.includes("#")) {
-                                currentLink = currentLink.substring(0, currentLink.indexOf("#"));
+                            if (currentLink?.includes('#')) {
+                                currentLink = currentLink.substring(0, currentLink.indexOf('#'));
                             }
-                            return currentLink.length > 0;
-                        }));
-    // @ts-expect-error ts-migrate(2569) FIXME: Type 'Set<unknown>' is not an array type or a stri... Remove this comment to see the full error message
+                            return currentLink;
+                        }) as string[]);
     return [...new Set(links)].map(link => {
         try {
             return new URL(link, baseUrl).toString()

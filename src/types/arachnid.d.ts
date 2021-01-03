@@ -1,5 +1,6 @@
 import { Headers, Response } from 'puppeteer';
 import { URL } from 'url';
+import { ExtractedInfo, ImageInfo } from './mainExtractor';
 
 export interface UrlWithDepth {
   url: URL;
@@ -26,7 +27,7 @@ export interface ResultInfo {
   h2?: string[];
   linksCount?: number;
   meta?: MetaInfo;
-  images?: imageInfo;
+  images?: ImageInfo;
   canonicalUrl?: string;
   redirectUrl?: string;
 }
@@ -44,21 +45,6 @@ export interface MetaInfo {
   author?: string;
   robots?: string;
   description?: string;
-}
-
-export interface imageInfo {
-  missingAlt: string[];
-  broken: string[];
-}
-
-export interface ExtractedInfo {
-  title: string;
-  h1: string[];
-  h2: string[];
-  meta: MetaInfo;
-  images: imageInfo;
-  canonicalUrl: string;
-  links?: string[];
 }
 
 export interface ErrorResponse {
