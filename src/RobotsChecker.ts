@@ -1,16 +1,17 @@
 // @ts-ignore
 import robotsParser from 'robots-parser';
 import Puppeteer from 'puppeteer';
+import { URL } from 'url';
 
 export default class RobotsChecker {
-  puppeteerParams: any;
-  robotsMap: any;
-  constructor(puppeteerParams: any) {
+  puppeteerParams: string[];
+  robotsMap: Map<string, any>;
+  constructor(puppeteerParams: string[]) {
     this.puppeteerParams = puppeteerParams;
     this.robotsMap = new Map();
   }
 
-  async getOrCreateForDomain(domain: any) {
+  private async getOrCreateForDomain(domain: URL): Promise<any> {
     if (!this.robotsMap.has(domain.host)) {
       const robotsFileUrl = `${domain.origin}/robots.txt`;
       const robotsContents = await this.getRobotsFileText(`${domain.origin}/robots.txt`);
@@ -21,11 +22,11 @@ export default class RobotsChecker {
     return this.robotsMap.get(domain.host);
   }
 
-  createRobotsObject(robotsUrl: any, robotsContents: any) {
+  private createRobotsObject(robotsUrl: string, robotsContents: string): any {
     return robotsParser(robotsUrl, robotsContents);
   }
 
-  async getRobotsFileText(robotsUrlTxt: any) {
+  private async getRobotsFileText(robotsUrlTxt: string): Promise<string> {
     const browser = await Puppeteer.launch({ headless: true, args: this.puppeteerParams });
     const robotsPage = await browser.newPage();
     const robotsResponse = await robotsPage.goto(robotsUrlTxt, { waitUntil: 'domcontentloaded', timeout: 0 });
@@ -40,7 +41,7 @@ export default class RobotsChecker {
     return robotsTxt;
   }
 
-  async isAllowed(pageUrlTxt: any, userAgent: any) {
+  public async isAllowed(pageUrlTxt: string, userAgent: string): Promise<boolean> {
     const domainRobots = await this.getOrCreateForDomain(new URL(pageUrlTxt));
     return domainRobots.isAllowed(pageUrlTxt, userAgent);
   }
