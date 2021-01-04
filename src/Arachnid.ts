@@ -1,17 +1,18 @@
 import { EventEmitter } from 'events';
-import Puppeteer from 'puppeteer';
+import Puppeteer, { Browser, Response } from 'puppeteer';
 import Queue from 'queue-fifo';
 
 import { extractor as mainExtractor } from './mainExtractor';
 import RobotsChecker from './RobotsChecker';
+import { ExtractIndexability, PageInfoResponse, ResultInfo, ResultItem, UrlsToVisitQ } from './types/arachnid';
 
 export default class Arachnid extends EventEmitter {
   private domain: URL;
   private params: never[];
   private maxDepth: number;
   private concurrencyNum: number;
-  private urlsToVisitQ: Queue<unknown>;
-  private pagesProcessed: Map<any, any>;
+  private urlsToVisitQ: Queue<UrlsToVisitQ>;
+  private pagesProcessed: Map<URL, any>;
   private followSubDomains: boolean;
   private ignoreRobots: boolean;
   private robotsChecker: RobotsChecker | undefined;
@@ -34,7 +35,7 @@ export default class Arachnid extends EventEmitter {
    * @method setCrawlDepth
    * @param {number} depth - set concurrency number
    */
-  setCrawlDepth(depth: any) {
+  setCrawlDepth(depth: number) {
     this.maxDepth = depth;
     return this;
   }
@@ -42,7 +43,7 @@ export default class Arachnid extends EventEmitter {
    * @method setConcurrency
    * @param {number} concurrencyNum - set pages to crawl depth
    */
-  setConcurrency(concurrencyNum: any) {
+  setConcurrency(concurrencyNum: number) {
     this.concurrencyNum = concurrencyNum;
     return this;
   }
@@ -50,7 +51,7 @@ export default class Arachnid extends EventEmitter {
    * @method setPuppeteerParameters
    * @param {Array} parameters - set list of arguments used by Puppeteer (this.args)
    */
-  setPuppeteerParameters(parameters: any) {
+  setPuppeteerParameters(parameters: []) {
     this.params = parameters;
     return this;
   }
@@ -58,7 +59,7 @@ export default class Arachnid extends EventEmitter {
    * @method setIgnoreRobots
    * @param {boolean} ignoreRobots - ignore allow/disallow rules written in robots.txt (robots.txt support enabled by default)
    */
-  setIgnoreRobots(ignoreRobots: any) {
+  setIgnoreRobots(ignoreRobots: boolean) {
     this.ignoreRobots = ignoreRobots;
     return this;
   }
@@ -66,11 +67,11 @@ export default class Arachnid extends EventEmitter {
    * @method shouldFollowSubdomains
    * @param {boolean} shouldFollow- enable or disable following links for subdomains of main domain
    */
-  shouldFollowSubdomains(shouldFollow: any) {
+  shouldFollowSubdomains(shouldFollow: boolean) {
     this.followSubDomains = shouldFollow;
     return this;
   }
-  _isValidHttpUrl(URLToValidate: any) {
+  _isValidHttpUrl(URLToValidate: string): boolean {
     let url;
     try {
       url = new URL(URLToValidate);
@@ -83,14 +84,10 @@ export default class Arachnid extends EventEmitter {
     this.robotsChecker = new RobotsChecker(this.params);
     this.urlsToVisitQ.enqueue({ url: this.domain, depth: 1 });
     while (!this.urlsToVisitQ.isEmpty()) {
-      this.emit(
-        'info',
-        `Getting next batch size from queue to process, current queue size ${this.urlsToVisitQ.size()}`,
-      );
+      this.emit('info', `Getting next batch size from queue to process, current queue size ${this.urlsToVisitQ.size()}`);
       const urlsToProcess = this.getNextPageBatch();
       const pagesInfoResult = await this.processPageBatch(urlsToProcess);
-      // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'item' implicitly has an 'any' type.
-      pagesInfoResult.forEach((item) => {
+      pagesInfoResult.forEach((item: any) => {
         this.markItemAsProcessed(item);
       });
     }
@@ -100,26 +97,26 @@ export default class Arachnid extends EventEmitter {
   markItemAsProcessed(item: any) {
     this.pagesProcessed.set(item.url, item);
   }
-  getNextPageBatch() {
+  getNextPageBatch(): Set<UrlsToVisitQ> {
     const urlsToVisit = new Set();
     let i = 0;
     while (i < this.concurrencyNum && !this.urlsToVisitQ.isEmpty()) {
-      const currentPage:any = this.urlsToVisitQ.dequeue();
+      const currentPage: UrlsToVisitQ = this.urlsToVisitQ.dequeue() as UrlsToVisitQ;
       const normalizedCurrentLink = this.getNormalizedLink(currentPage.url);
       if (this.shouldProcessPage(normalizedCurrentLink) && !urlsToVisit.has(normalizedCurrentLink)) {
         urlsToVisit.add(currentPage);
         i++;
       }
     }
-    return urlsToVisit;
+    return urlsToVisit as Set<UrlsToVisitQ>;
   }
-  shouldProcessPage(normalizedPageUrl: any) {
+  shouldProcessPage(normalizedPageUrl: any): boolean {
     return !this.pagesProcessed.has(normalizedPageUrl);
   }
-  async processPageBatch(pagesToVisit: any) {
+  async processPageBatch(pagesToVisit: Set<UrlsToVisitQ>) {
     const browser = await Puppeteer.launch({ headless: true, args: this.params });
     const crawlPromises: any = [];
-    pagesToVisit.forEach((page: any) => {
+    pagesToVisit.forEach((page: UrlsToVisitQ) => {
       try {
         crawlPromises.push(this.crawlPage(browser, page));
       } catch (error) {
@@ -206,13 +203,13 @@ export default class Arachnid extends EventEmitter {
   isInternalLink(currentPageUrl: any) {
     return this.isSameHost(currentPageUrl) || this.isSubDomain(currentPageUrl);
   }
-  extractIndexability(pageInfoResult: any) {
+  extractIndexability(pageInfoResult: ResultInfo): ExtractIndexability{
     let isIndexable = true;
     let indexabilityStatus = '';
-    if (pageInfoResult.robotsHeader && pageInfoResult.robotsHeader.includes('noindex')) {
+    if (pageInfoResult.robotsHeader?.includes('noindex')) {
       isIndexable = false;
       indexabilityStatus = 'noindex';
-    } else if (pageInfoResult.meta && pageInfoResult.meta.robots && pageInfoResult.meta.robots.includes('noindex')) {
+    } else if (pageInfoResult.meta.robots?.includes('noindex')) {
       isIndexable = false;
       indexabilityStatus = 'noindex';
     } else if (pageInfoResult.statusCode === 0) {
@@ -221,16 +218,13 @@ export default class Arachnid extends EventEmitter {
     } else if (pageInfoResult.statusCode >= 400) {
       isIndexable = false;
       indexabilityStatus = 'Client Error';
-    } else if (
-      pageInfoResult.canonicalUrl &&
-      decodeURI(pageInfoResult.canonicalUrl).toLowerCase() !== decodeURI(pageInfoResult.url).toLowerCase()
-    ) {
+    } else if (decodeURI(pageInfoResult.canonicalUrl).toLowerCase() !== decodeURI(pageInfoResult.url).toLowerCase()) {
       isIndexable = false;
       indexabilityStatus = 'Canonicalised';
     }
     return { isIndexable, indexabilityStatus };
   }
-  async crawlPage(browser: any, singlePageLink: any) {
+  async crawlPage(browser: Browser, singlePageLink: any) {
     const singlePageUrl = singlePageLink.url.toString();
     const userAgent = await browser.userAgent();
     const isAllowedByRobotsTxt = await this.isAllowedByRobotsTxt(singlePageUrl, userAgent);
@@ -258,7 +252,7 @@ export default class Arachnid extends EventEmitter {
       .catch((error: any) => {
         if (error.stack.includes('ERR_NAME_NOT_RESOLVED')) {
           return {
-            statusCode: () => 0,
+            status: () => 0,
             statusText: () => 'Invalid URL',
             headers: () => {
               return { 'content-type': '', 'x-robots-tag': '' };
@@ -291,11 +285,11 @@ export default class Arachnid extends EventEmitter {
       depth: singlePageLink.depth,
     };
   }
-  markResponseAsVisited(response: any, depth: any) {
+  markResponseAsVisited(response: Response, depth: number): void {
     const responseUrl = new URL(response.url());
     const pageUrl = this.getNormalizedLink(responseUrl);
     if (!this.pagesProcessed.has(pageUrl)) {
-      const resultItem = {
+      const resultItem: ResultItem = {
         url: pageUrl,
         statusCode: response.status(),
         statusText: response.statusText(),
@@ -304,14 +298,14 @@ export default class Arachnid extends EventEmitter {
         depth,
       };
       if ([301, 302].includes(response.status())) {
-        (resultItem as any).redirectUrl = response.headers().location;
-        (resultItem as any).indexability = false;
-        (resultItem as any).indexabilityStatus = 'Redirected';
+        resultItem.redirectUrl = response.headers().location;
+        resultItem.indexability = false;
+        resultItem.indexabilityStatus = 'Redirected';
       }
       this.markItemAsProcessed(resultItem);
     }
   }
-  getRobotsBlockedResult(singlePageUrl: any, depth: any) {
+  getRobotsBlockedResult(singlePageUrl: URL, depth: number){
     return {
       url: singlePageUrl,
       response: {
@@ -325,7 +319,7 @@ export default class Arachnid extends EventEmitter {
       depth,
     };
   }
-  getPageInfoResponse(response: any) {
+  getPageInfoResponse(response: Response): PageInfoResponse {
     return {
       statusCode: response.status(),
       statusText: response.statusText(),
@@ -333,15 +327,16 @@ export default class Arachnid extends EventEmitter {
       robotsHeader: response.headers()['x-robots-tag'],
     };
   }
-  async isAllowedByRobotsTxt(singlePageUrl: any, userAgent: any) {
+  async isAllowedByRobotsTxt(singlePageUrl: URL, userAgent: string): Promise<boolean> {
     if (this.ignoreRobots) {
       return true;
     }
-    return await this.robotsChecker!.isAllowed(singlePageUrl, userAgent).catch((ex: any) =>
-      this.emit('error', `cannot evaluate robots.txt related to url: ${singlePageUrl}, exception: ${ex.toString()}`),
-    );
+    return await this.robotsChecker!.isAllowed(singlePageUrl, userAgent)
+      .catch((ex: any) =>
+        this.emit('error', `cannot evaluate robots.txt related to url: ${singlePageUrl}, exception: ${ex.toString()}`),
+      );
   }
-  getNormalizedLink(currentPageUrl: any) {
+  getNormalizedLink(currentPageUrl: URL): string {
     return currentPageUrl.href.replace(currentPageUrl.hash, '');
   }
 }
