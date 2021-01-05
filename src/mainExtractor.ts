@@ -76,7 +76,7 @@ const extractImages = async (page: Page): Promise<ImageInfo> => {
 
 const extractElemContents = async (page: Page, elemSelector: string): Promise<string[]> => await page
     .evaluate((selector: string) => [...document.querySelectorAll(selector)]
-        .map(elem => elem.innerText)
+        .map(elem => elem.innerHTML)
     ,elemSelector);
 
 const extractCanonical = async (page: Page): Promise<string> => await page

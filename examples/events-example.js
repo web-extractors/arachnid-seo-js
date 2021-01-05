@@ -1,4 +1,4 @@
-const Arachnid = require('../lib/Arachnid');
+const Arachnid = require('../lib/Arachnid').default;
 
 const domain = 'https://www.example.com/';
 const arachnid = new Arachnid(domain).setConcurrency(5).setCrawlDepth(2);

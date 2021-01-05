@@ -1,4 +1,4 @@
-const Arachnid = require('../lib/Arachnid');
+const Arachnid = require('../lib/Arachnid').default;
 
 async function crawl(domain, depth, concurrency) {
     const startTime = Date.now();
