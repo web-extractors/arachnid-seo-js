@@ -1,8 +1,8 @@
 export interface ImageElementAttributes {
-    imageAlternateText: string,
-    imageSource: string,
+  imageAlternateText: string;
+  imageSource: string;
 }
 
 export interface ImageElementAttributesWithStatusCode extends ImageElementAttributes {
-    statusCode: number
+  statusCode: number;
 }

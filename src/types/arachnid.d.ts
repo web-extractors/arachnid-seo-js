@@ -1,6 +1,6 @@
 import { Headers, Response } from 'puppeteer';
 import { URL } from 'url';
-import { ExtractedInfo } from './mainExtractor';
+import { ExtractedInfo as ExtractedDomInfo } from './mainExtractor';
 
 export interface UrlWithDepth {
   url: URL;
@@ -12,7 +12,7 @@ export interface IndexabilityInfo {
   indexabilityStatus: string;
 }
 
-export interface ResultInfo extends ExtractedInfo {
+export interface ResultInfo {
   url: string;
   statusCode: number;
   statusText: string;
@@ -22,14 +22,14 @@ export interface ResultInfo extends ExtractedInfo {
   indexabilityStatus?: string;
   contentType?: string | null;
   robotsHeader?: string | null;
-  linksCount?: number;
   redirectUrl?: string;
+  DOMInfo?: ExtractedDomInfo;
 }
 
 export interface CrawlPageResult {
   url: string;
   response: Response | ErrorResponse;
-  extractedInfo?: ExtractedInfo;
+  extractedInfo?: ExtractedDomInfo;
   depth: number;
 }
 
@@ -43,21 +43,21 @@ export interface MetaInfo {
 
 export interface ErrorResponse {
   url(): string;
-  status(): number,
-  statusText(): string,
-  headers(): Headers
+  status(): number;
+  statusText(): string;
+  headers(): Headers;
 }
 
 export interface UrlsToVisitQ {
-  url: URL,
-  depth: number
+  url: URL;
+  depth: number;
 }
 
 export interface PageInfoResponse {
-  statusCode: number,
-  statusText: string,
-  contentType: string,
-  robotsHeader: string,
+  statusCode: number;
+  statusText: string;
+  contentType: string;
+  robotsHeader: string;
 }
 
 export interface ResultItem {
@@ -69,10 +69,10 @@ export interface ResultItem {
   depth: number;
   redirectUrl?: string;
   indexability?: boolean;
-  indexabilityStatus?: string;  
+  indexabilityStatus?: string;
 }
 
 export interface ExtractIndexability {
-  isIndexable: boolean
-  indexabilityStatus: string
+  isIndexable: boolean;
+  indexabilityStatus: string;
 }

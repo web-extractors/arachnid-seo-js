@@ -25,6 +25,7 @@ export const extractor = async (page: Page): Promise<ExtractedInfo> => {
         images: mainInfo[4],
         canonicalUrl: mainInfo[5],
         links: mainInfo[6],
+        uniqueOutLinks: mainInfo[6].length
     };
 }
 
@@ -74,10 +75,10 @@ const extractImages = async (page: Page): Promise<ImageInfo> => {
       });
 }  
 
-const extractElemContents = async (page: Page, elemSelector: string): Promise<string[]> => await page
+const extractElemContents = async (page: Page, elemSelector: string): Promise<string[] > => await page
     .evaluate((selector: string) => [...document.querySelectorAll(selector)]
-        .map(elem => elem.innerHTML)
-    ,elemSelector);
+        .map(elem => elem.textContent !== null ? elem.textContent.trim(): "")
+    , elemSelector);
 
 const extractCanonical = async (page: Page): Promise<string> => await page
     .evaluate(() => document
@@ -111,5 +112,5 @@ const extractLinks = async (page: Page, baseUrl: string): Promise<(URL | string)
         } catch (e) {
             return link
         }
-    });
+    }).filter(url => (url != page.url()));
 }
