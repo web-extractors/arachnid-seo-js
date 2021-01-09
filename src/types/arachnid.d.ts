@@ -65,7 +65,7 @@ export interface ResultItem {
   statusCode: number;
   statusText: string;
   contentType: string;
-  isInternal: any;
+  isInternal: boolean;
   depth: number;
   redirectUrl?: string;
   indexability?: boolean;

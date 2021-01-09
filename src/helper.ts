@@ -10,8 +10,8 @@ export const findImages = async (page: Page): Promise<ImageElementAttributes[]> 
 );
 
 const imageCache = new Map();
-export const addImageStatusCode = async (page: any, images: any): Promise<ImageElementAttributesWithStatusCode[]> => await Promise.all(
-  images.map(async (image: any) => {
+export const addImageStatusCode = async (page: Page, images: ImageElementAttributes[]): Promise<ImageElementAttributesWithStatusCode[]> => await Promise.all(
+  images.map(async (image: ImageElementAttributes) => {
     const cacheKey = image.imageSource;
     if (imageCache.has(cacheKey)) {
       return imageCache.get(cacheKey);
@@ -20,7 +20,7 @@ export const addImageStatusCode = async (page: any, images: any): Promise<ImageE
     const response = await newPage.goto(image.imageSource, { waitUntil: 'domcontentloaded' });
     const result = {
       ...image,
-      statusCode: response.status(),
+      statusCode: response !== null ? response.status(): 0,
     };
     newPage.close();
     imageCache.set(cacheKey, result);
