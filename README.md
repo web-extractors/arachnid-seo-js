@@ -121,16 +121,17 @@ to change that concurrency value, `setConcurrency` method can be used:
 cralwer.setConcurrency(10);
 ```
 
-#### Setting Puppeteer Arguments
+#### Setting Puppeteer Launch Options
 
-To pass additional arguments to puppeteer browser instance, `setPuppeteerArgs` method can be used:
+To pass additional arguments to puppeteer browser instance, `setPuppeteerOptions` method can be used:
 
-> Refer to puppeteeer documentation for more information about [defaultArgs](https://github.com/puppeteer/puppeteer/blob/main/docs/api.md#puppeteerdefaultargsoptions).
+> Refer to puppeteeer documentation for more information about [options](https://github.com/puppeteer/puppeteer/blob/main/docs/api.md#puppeteerlaunchoptions).
 
 Sample below to run `Arachnid` on UNIX with no need to install extra dependencies:
 
 ```js
-    cralwer.setPuppeteerArgs([
+  cralwer.setPuppeteerOptions({
+      args: [
         '--disable-gpu',
         '--disable-dev-shm-usage',
         '--disable-setuid-sandbox',
@@ -138,7 +139,8 @@ Sample below to run `Arachnid` on UNIX with no need to install extra dependencie
         '--no-sandbox',
         '--no-zygote',
         '--single-process'
-    ]);
+    ]
+  });
 ```
 
 #### Enable following subdomains links

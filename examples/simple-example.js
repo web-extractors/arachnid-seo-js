@@ -6,7 +6,8 @@ async function crawl(domain, depth, concurrency) {
         .setConcurrency(concurrency)
         .setCrawlDepth(depth)
         .shouldFollowSubdomains(true)
-        .setPuppeteerParameters([
+        .setPuppeteerOptions({
+            args: [
             '--disable-gpu',
             '--disable-dev-shm-usage',
             '--disable-setuid-sandbox',
@@ -14,7 +15,7 @@ async function crawl(domain, depth, concurrency) {
             '--no-sandbox',
             '--no-zygote',
             '--single-process',
-        ])
+        ]})
     const results = await arachnidObj.traverse();
 
     const endTime = Date.now();
