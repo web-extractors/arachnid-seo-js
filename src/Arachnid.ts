@@ -1,16 +1,23 @@
 import { EventEmitter } from 'events';
 import Puppeteer, { Browser, LaunchOptions, Response } from 'puppeteer';
-import Queue  from 'queue-fifo';
+import Queue from 'queue-fifo';
 import { URL } from 'url';
 
 import { extractor as mainExtractor } from './mainExtractor';
 import RobotsChecker from './RobotsChecker';
-import { CrawlPageResult, ErrorResponse, IndexabilityInfo, ResultInfo, UrlWithDepth } from './types/arachnid';
+import {
+  CrawlPageResult,
+  ErrorResponse,
+  IndexabilityInfo,
+  ResultInfo,
+  UrlWithDepth,
+  PageResourceType,
+} from './types/arachnid';
 import { ExtractedInfo } from './types/mainExtractor';
 
 export default class Arachnid extends EventEmitter {
   private domain: URL;
-  private puppeteerOptions:  LaunchOptions;
+  private puppeteerOptions: LaunchOptions;
   private maxDepth?: number;
   private maxResultsNum?: number;
   private concurrencyNum: number;
@@ -153,7 +160,7 @@ export default class Arachnid extends EventEmitter {
   }
 
   private async processPageBatch(pagesToVisit: Set<UrlWithDepth>): Promise<ResultInfo[]> {
-    const browser = await Puppeteer.launch({ headless: true, ...this.puppeteerOptions});
+    const browser = await Puppeteer.launch({ headless: true, ...this.puppeteerOptions });
     const crawlPromises: Promise<CrawlPageResult>[] = [];
     pagesToVisit.forEach((pageLink: UrlWithDepth) => {
       try {
@@ -166,7 +173,7 @@ export default class Arachnid extends EventEmitter {
     await Promise.all(crawlPromises)
       .then((allPagesData) => {
         allPagesData.forEach((data: CrawlPageResult) => {
-          const { url, response, extractedInfo, depth } = data;
+          const { url, response, extractedInfo, depth, resourceInfo } = data;
           let pageInfoResult: ResultInfo = {
             url,
             isInternal: response !== null && response.status() !== 0 ? this.isInternalLink(new URL(url)) : false,
@@ -174,7 +181,8 @@ export default class Arachnid extends EventEmitter {
             statusText: response !== null ? response.statusText() : '',
             contentType: response !== null && response.headers() !== null ? response.headers()['content-type'] : null,
             robotsHeader: response !== null && response.headers() !== null ? response.headers()['x-robots-tag'] : null,
-            depth
+            depth,
+            resourceInfo,
           };
           if (extractedInfo) {
             this.addChildrenToQueue(extractedInfo, depth);
@@ -263,8 +271,7 @@ export default class Arachnid extends EventEmitter {
     if (pageInfoResult.robotsHeader && pageInfoResult.robotsHeader.includes('noindex')) {
       isIndexable = false;
       indexabilityStatus = 'noindex';
-    } else if (pageInfoResult?.DOMInfo?.meta?.robots && 
-      pageInfoResult.DOMInfo.meta.robots.includes('noindex')) {
+    } else if (pageInfoResult?.DOMInfo?.meta?.robots && pageInfoResult.DOMInfo.meta.robots.includes('noindex')) {
       isIndexable = false;
       indexabilityStatus = 'noindex';
     } else if (pageInfoResult.statusCode === 0) {
@@ -293,15 +300,21 @@ export default class Arachnid extends EventEmitter {
     }
     const page = await browser.newPage();
     const redirectChain = [singlePageUrl];
+    const resourcesMap = new Map<string, PageResourceType>();
     page.on('response', async (subResponse: Response) => {
       if ([301, 302].includes(subResponse.status()) && redirectChain.includes(subResponse.url())) {
         redirectChain.push(subResponse.headers().location);
         const subrequestRobotsAllowed = await this.isAllowedByRobotsTxt(subResponse.url(), userAgent);
         if (!subrequestRobotsAllowed) {
-          this.markResponseAsVisited(this.getErrorResponse(subResponse.url(), "Blocked by robots.txt"), singlePageLink.depth);
+          this.markResponseAsVisited(
+            this.getErrorResponse(subResponse.url(), 'Blocked by robots.txt'),
+            singlePageLink.depth,
+          );
         } else {
           this.markResponseAsVisited(subResponse, singlePageLink.depth);
         }
+      } else if (this.isInternalLink(singlePageLink.url)) {
+        this.recordSubResource(subResponse, resourcesMap);
       }
     });
     this.emit('pageCrawlingStarted', { url: singlePageUrl, depth: singlePageLink.depth });
@@ -334,12 +347,18 @@ export default class Arachnid extends EventEmitter {
         return 0; // Either invalid request or a race condition
       }
     });
-    return {
+    const resultItem: CrawlPageResult = {
       url: response !== null ? response.url() : singlePageUrl,
       response: response !== null ? response : this.getErrorResponse(singlePageUrl, 'Unknown error'),
       extractedInfo,
-      depth: singlePageLink.depth,
+      depth: singlePageLink.depth
     };
+
+    if (this.isInternalLink(singlePageLink.url)) {
+      resultItem.resourceInfo = Array.from(resourcesMap.values());
+    }
+
+    return resultItem;
   }
 
   private markResponseAsVisited(response: Response | ErrorResponse, depth: number) {
@@ -365,7 +384,7 @@ export default class Arachnid extends EventEmitter {
   }
 
   private getRobotsBlockedResult(singlePageUrl: string, depth: number): CrawlPageResult {
-    const response = this.getErrorResponse(singlePageUrl, "Blocked by robots.txt");
+    const response = this.getErrorResponse(singlePageUrl, 'Blocked by robots.txt');
     return {
       url: singlePageUrl,
       response,
@@ -382,6 +401,20 @@ export default class Arachnid extends EventEmitter {
         return {};
       },
     };
+  }
+
+  private recordSubResource(subResponse: Response, resourcesMap: Map<string, PageResourceType>) {
+    const isBroken = subResponse.status() >= 400;
+    const resourceType = subResponse.request().resourceType();
+    if (!resourcesMap.has(resourceType)) {
+      resourcesMap.set(resourceType, { type: resourceType, count: 0, broken: [] });
+    }
+    const resourceItem = resourcesMap.get(resourceType)!;
+    resourceItem.count++;
+    if (isBroken) {
+      resourceItem.broken.push(subResponse.url());
+    }
+    resourcesMap.set(resourceType, resourceItem);
   }
 
   private async isAllowedByRobotsTxt(singlePageUrl: string, userAgent: string): Promise<boolean> {

@@ -1,7 +1,5 @@
 import { Page } from 'puppeteer';
 import { ExtractedInfo, ImageInfo } from './types/mainExtractor';
-import { findImages, addImageStatusCode } from './helper';
-import { ImageElementAttributesWithStatusCode } from './types/helper';
 
 
 export const extractor = async (page: Page): Promise<ExtractedInfo> => {
@@ -60,15 +58,16 @@ const extractMeta = async (page: Page): Promise<any> => {
 const extractImages = async (page: Page): Promise<ImageInfo> => {
     return new Promise<ImageInfo>(async (resolve, reject) => {
         try {
-            const imagesWithStatusCode = await addImageStatusCode(page, await findImages(page));
-            const brokenImages: string[] = imagesWithStatusCode
-                .filter((image: ImageElementAttributesWithStatusCode) => image.statusCode > 399)
-                .map((image: ImageElementAttributesWithStatusCode): string => image.imageSource);
-            const imagesWithoutAlt: string[] = imagesWithStatusCode
-                .filter((image: ImageElementAttributesWithStatusCode) => image.imageAlternateText.length === 0)
-                .map((image: ImageElementAttributesWithStatusCode): string => image.imageSource);
-                const toResolve: ImageInfo = {broken: brokenImages, missingAlt: imagesWithoutAlt}
-            resolve(toResolve);
+            const missingAltImages: string[] = await page.evaluate(() => Array.from(document.images, (image: HTMLImageElement) => {
+                return {
+                  imageAlternateText: image.alt,
+                  imageSource: image.src,
+                };
+              })
+              .filter(item => item.imageAlternateText.length === 0)
+              .map(image => image.imageSource)
+            );
+            resolve({missingAlt: [...new Set(missingAltImages)]});
         } catch(ex) {
             reject({error: ex});
         }
@@ -112,5 +111,5 @@ const extractLinks = async (page: Page, baseUrl: string): Promise<(URL | string)
         } catch (e) {
             return link
         }
-    }).filter(url => (url != page.url()));
+    }).filter(url => (url !== page.url()));
 }

@@ -24,12 +24,14 @@ export interface ResultInfo {
   robotsHeader?: string | null;
   redirectUrl?: string;
   DOMInfo?: ExtractedDomInfo;
+  resourceInfo?: PageResourceType[];
 }
 
 export interface CrawlPageResult {
   url: string;
   response: Response | ErrorResponse;
   extractedInfo?: ExtractedDomInfo;
+  resourceInfo?: PageResourceType[];
   depth: number;
 }
 
@@ -70,6 +72,13 @@ export interface ResultItem {
   redirectUrl?: string;
   indexability?: boolean;
   indexabilityStatus?: string;
+  resourceInfo?: PageResourceType[];
+}
+
+export interface PageResourceType {
+  type: string;
+  count: number;
+  broken: string[];
 }
 
 export interface ExtractIndexability {
