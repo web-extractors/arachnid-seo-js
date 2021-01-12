@@ -1,13 +1,13 @@
-import Puppeteer from 'puppeteer';
+import Puppeteer, { LaunchOptions } from 'puppeteer';
 import { URL } from 'url';
 import { RobotsParser } from './types/robots-parser';
 import robotsParser from 'robots-parser';
 
 export default class RobotsChecker {
-  private puppeteerParams: string[];
+  private puppeteerParams: LaunchOptions; 
   private robotsMap: Map<string, RobotsParser>;
 
-  constructor(puppeteerParams: string[]) {
+  constructor(puppeteerParams: LaunchOptions) {
     this.puppeteerParams = puppeteerParams;
     this.robotsMap = new Map();
   }
@@ -28,7 +28,7 @@ export default class RobotsChecker {
   }
 
   private async getRobotsFileText(robotsUrlTxt: string): Promise<string> {
-    const browser = await Puppeteer.launch({ headless: true, args: this.puppeteerParams });
+    const browser = await Puppeteer.launch({ headless: true, ...this.puppeteerParams });
     const robotsPage = await browser.newPage();
     const robotsResponse = await robotsPage.goto(robotsUrlTxt, { waitUntil: 'domcontentloaded', timeout: 0 });
     let robotsTxt = '';

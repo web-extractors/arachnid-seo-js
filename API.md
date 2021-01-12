@@ -10,8 +10,8 @@
 <dt><a href="#setConcurrency">setConcurrency(concurrencyNum)</a></dt>
 <dd><p>set number of urls to crawl concurrenctly at same time</p>
 </dd>
-<dt><a href="#setPuppeteerParameters">setPuppeteerParameters(parameters)</a></dt>
-<dd><p>set list of arguments used by Puppeteer browser instance</p>
+<dt><a href="#setPuppeteerOptions">setPuppeteerOptions(options)</a></dt>
+<dd><p>set Puppeteer Launch Options</p>
 </dd>
 <dt><a href="#ignoreRobots">ignoreRobots()</a></dt>
 <dd><p>ignore allow/disallow rules written in robots.txt (robots.txt support enabled by default)</p>
@@ -54,16 +54,16 @@ set number of urls to crawl concurrenctly at same time
 | --- | --- | --- |
 | concurrencyNum | <code>number</code> | concurrency number |
 
-<a name="setPuppeteerParameters"></a>
+<a name="setPuppeteerOptions"></a>
 
-## setPuppeteerParameters(parameters)
-set list of arguments used by Puppeteer browser instance
+## setPuppeteerOptions(options)
+set Puppeteer Launch Options
 
 **Kind**: global function  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| parameters | <code>Array</code> | puppeteer arguments array |
+| options | <code>Object</code> | puppeteer launch options |
 
 <a name="ignoreRobots"></a>
 

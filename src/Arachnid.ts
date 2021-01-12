@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import Puppeteer, { Browser, Response } from 'puppeteer';
+import Puppeteer, { Browser, LaunchOptions, Response } from 'puppeteer';
 import Queue  from 'queue-fifo';
 import { URL } from 'url';
 
@@ -10,7 +10,7 @@ import { ExtractedInfo } from './types/mainExtractor';
 
 export default class Arachnid extends EventEmitter {
   private domain: URL;
-  private params: string[];
+  private puppeteerOptions:  LaunchOptions;
   private maxDepth?: number;
   private maxResultsNum?: number;
   private concurrencyNum: number;
@@ -26,7 +26,7 @@ export default class Arachnid extends EventEmitter {
       throw Error('Please enter full website URL with protocol (http or https)');
     }
     this.domain = new URL(domainString);
-    this.params = [];
+    this.puppeteerOptions = {};
     this.concurrencyNum = 5;
     this.urlsToVisitQ = new Queue();
     this.pagesProcessed = new Map();
@@ -65,12 +65,12 @@ export default class Arachnid extends EventEmitter {
   }
 
   /**
-   * @method setPuppeteerParameters
-   * @description set list of arguments used by Puppeteer browser instance
-   * @param {Array} parameters - puppeteer arguments array
+   * @method setPuppeteerOptions
+   * @description set Puppeteer Launch Options
+   * @param {Object} options - puppeteer launch options
    */
-  public setPuppeteerParameters(parameters: string[]) {
-    this.params = parameters;
+  public setPuppeteerOptions(options: LaunchOptions) {
+    this.puppeteerOptions = options;
     return this;
   }
 
@@ -103,7 +103,7 @@ export default class Arachnid extends EventEmitter {
   }
 
   public async traverse(): Promise<Map<string, ResultInfo>> {
-    this.robotsChecker = new RobotsChecker(this.params);
+    this.robotsChecker = new RobotsChecker(this.puppeteerOptions);
     if (typeof this.maxDepth === 'undefined' && typeof this.maxResultsNum === 'undefined') {
       this.maxDepth = 1;
     }
@@ -153,7 +153,7 @@ export default class Arachnid extends EventEmitter {
   }
 
   private async processPageBatch(pagesToVisit: Set<UrlWithDepth>): Promise<ResultInfo[]> {
-    const browser = await Puppeteer.launch({ headless: true, args: this.params });
+    const browser = await Puppeteer.launch({ headless: true, ...this.puppeteerOptions});
     const crawlPromises: Promise<CrawlPageResult>[] = [];
     pagesToVisit.forEach((pageLink: UrlWithDepth) => {
       try {
