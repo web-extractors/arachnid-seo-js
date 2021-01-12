@@ -103,7 +103,7 @@ export default class Arachnid extends EventEmitter {
   }
 
   public async traverse(): Promise<Map<string, ResultInfo>> {
-    this.robotsChecker = new RobotsChecker();
+    this.robotsChecker = new RobotsChecker(this.puppeteerOptions);
     if (typeof this.maxDepth === 'undefined' && typeof this.maxResultsNum === 'undefined') {
       this.maxDepth = 1;
     }
