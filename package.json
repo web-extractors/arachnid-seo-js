@@ -1,7 +1,7 @@
 {
-  "name": "arachnid",
-  "version": "0.0.1",
-  "description": "Analyse your site's SEO",
+  "name": "arachnid-seo",
+  "version": "1.0.0-beta",
+  "description": "Web crawler for extracting internal site links info for SEO auditing & optimization purposes.",
   "main": "index.js",
   "files": [
     "lib/**/*"
@@ -15,12 +15,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/WebExtractors/Arachnid.git"
+    "url": "git+https://github.com/WebExtractors/arachnid-seo-js.git"
   },
   "keywords": [
-    "SEO",
-    "friendly",
-    "metadata"
+    "crawler",
+    "scraper",
+    "seo",
+    "seotools",
+    "seo-optimization",
+    "crawler-engine"
   ],
   "contributors": [
     {
@@ -35,9 +38,9 @@
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/WebExtractors/Arachnid/issues"
+    "url": "https://github.com/WebExtractors/arachnid-seo-js/issues"
   },
-  "homepage": "https://github.com/WebExtractors/Arachnid#readme",
+  "homepage": "https://github.com/WebExtractors/arachnid-seo-js#readme",
   "dependencies": {
     "puppeteer": "5.2.1",
     "queue-fifo": "^0.2.6",
