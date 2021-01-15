@@ -1,5 +1,5 @@
 {
-  "name": "arachnid-seo",
+  "name": "@web-extractors/arachnid-seo",
   "version": "1.0.0-beta",
   "description": "Web crawler for extracting internal site links info for SEO auditing & optimization purposes.",
   "main": "index.js",
@@ -15,7 +15,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/WebExtractors/arachnid-seo-js.git"
+    "url": "git+https://github.com/web-extractors/arachnid-seo-js.git"
   },
   "keywords": [
     "crawler",
@@ -26,21 +26,14 @@
     "crawler-engine"
   ],
   "contributors": [
-    {
-      "name": "Zeid Rashwani",
-      "email": "zrashwani@gmail.com",
-      "url": "http://zrashwani.com/"
-    },
-    {
-      "name": "Ahmad Khasawneh",
-      "email": "ahmad.khasawneh@hotmail.com"
-    }
+    "Zeid Rashwani <zrashwani@gmail.com> (http://zrashwani.com/)",
+    "Ahmad Khasawneh <ahmad.khasawneh@hotmail.com>"
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/WebExtractors/arachnid-seo-js/issues"
+    "url": "https://github.com/web-extractors/arachnid-seo-js/issues"
   },
-  "homepage": "https://github.com/WebExtractors/arachnid-seo-js#readme",
+  "homepage": "https://github.com/web-extractors/arachnid-seo-js#readme",
   "dependencies": {
     "puppeteer": "5.2.1",
     "queue-fifo": "^0.2.6",
@@ -56,5 +49,10 @@
     "tslint": "^6.1.3",
     "tslint-config-prettier": "^1.18.0",
     "typescript": "^4.1.3"
-  }
+  },
+  "directories": {
+    "example": "examples",
+    "lib": "lib"
+  },
+  "author": "Web Extractors"
 }
