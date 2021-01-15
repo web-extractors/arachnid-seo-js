@@ -43,45 +43,57 @@ results output:
 
 ```js
 Map(3) {
-  'https://www.example.com/' => {
-    url: 'https://www.example.com/',
-    isInternal: true,
-    statusCode: 200,
-    statusText: '',
-    contentType: 'text/html; charset=UTF-8',
-    robotsHeader: undefined,
-    depth: 1,
-    linksCount: 1,
-    title: 'Example Domain',
-    h1: [ 'Example Domain' ],
-    h2: [],
-    meta: [],
-    images: { broken: [], missingAlt: [] },
-    canonicalUrl: '',
-    indexability: true,
-    indexabilityStatus: ''
+  "https://www.example.com/" => {
+    "url": "https://www.example.com/",
+    "isInternal": true,
+    "statusCode": 200,
+    "statusText": "",
+    "contentType": "text/html; charset=UTF-8",
+    "depth": 1,
+    "resourceInfo": [
+      {
+        "type": "document",
+        "count": 1,
+        "broken": []
+      }
+    ],
+    "DOMInfo": {
+      "title": "Example Domain",
+      "h1": [
+        "Example Domain"
+      ],
+      "h2": [],
+      "meta": [],
+      "images": {
+        "missingAlt": []
+      },
+      "canonicalUrl": "",
+      "uniqueOutLinks": 1
+    },
+    "isIndexable": true,
+    "indexabilityStatus": ""
   },
-  'https://www.iana.org/domains/example' => {
-    url: 'https://www.iana.org/domains/example',
-    statusCode: 301,
-    statusText: '',
-    contentType: 'text/html; charset=iso-8859-1',
-    isInternal: false,
-    depth: 2,
-    redirectUrl: 'https://www.iana.org/domains/reserved',
-    indexability: false,
-    indexabilityStatus: 'Redirected'
+  "https://www.iana.org/domains/example" => {
+    "url": "https://www.iana.org/domains/example",
+    "statusCode": 301,
+    "statusText": "",
+    "contentType": "text/html; charset=iso-8859-1",
+    "isInternal": false,
+    "robotsHeader": null,
+    "depth": 2,
+    "redirectUrl": "https://www.iana.org/domains/reserved",
+    "isIndexable": false,
+    "indexabilityStatus": "Redirected"
   },
-  'https://www.iana.org/domains/reserved' => {
-    url: 'https://www.iana.org/domains/reserved',
-    isInternal: false,
-    statusCode: 200,
-    statusText: '',
-    contentType: 'text/html; charset=UTF-8',
-    robotsHeader: undefined,
-    depth: 2,
-    indexability: true,
-    indexabilityStatus: ''
+  "https://www.iana.org/domains/reserved" => {
+    "url": "https://www.iana.org/domains/reserved",
+    "isInternal": false,
+    "statusCode": 200,
+    "statusText": "",
+    "contentType": "text/html; charset=UTF-8",
+    "depth": 2,
+    "isIndexable": true,
+    "indexabilityStatus": ""
   }
 }
 ```
