@@ -2,7 +2,7 @@
   "name": "@web-extractors/arachnid-seo",
   "version": "1.0.0-beta",
   "description": "Web crawler for extracting internal site links info for SEO auditing & optimization purposes.",
-  "main": "index.js",
+  "main": "lib/arachnid.js",
   "files": [
     "lib/**/*"
   ],
