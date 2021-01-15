@@ -1,5 +1,5 @@
 {
-  "name": "arachnid-seo",
+  "name": "@web-extractors/arachnid-seo",
   "version": "1.0.0-beta",
   "description": "Web crawler for extracting internal site links info for SEO auditing & optimization purposes.",
   "main": "index.js",
@@ -26,15 +26,8 @@
     "crawler-engine"
   ],
   "contributors": [
-    {
-      "name": "Zeid Rashwani",
-      "email": "zrashwani@gmail.com",
-      "url": "http://zrashwani.com/"
-    },
-    {
-      "name": "Ahmad Khasawneh",
-      "email": "ahmad.khasawneh@hotmail.com"
-    }
+    "Zeid Rashwani <zrashwani@gmail.com> (http://zrashwani.com/)",
+    "Ahmad Khasawneh <ahmad.khasawneh@hotmail.com>"
   ],
   "license": "MIT",
   "bugs": {
@@ -56,5 +49,10 @@
     "tslint": "^6.1.3",
     "tslint-config-prettier": "^1.18.0",
     "typescript": "^4.1.3"
-  }
+  },
+  "directories": {
+    "example": "examples",
+    "lib": "lib"
+  },
+  "author": "Web Extractors"
 }
