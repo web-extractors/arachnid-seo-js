@@ -1,4 +1,4 @@
-const Arachnid = require('../lib/Arachnid').default;
+const Arachnid = require('@web-extractors/arachnid-seo').default;
 
 async function crawl(domain, depth, concurrency) {
     const startTime = Date.now();

@@ -1,4 +1,4 @@
-const Arachnid = require('../lib/Arachnid').default;
+const Arachnid = require('@web-extractors/arachnid-seo').default;
 
 const domain = 'https://www.example.com/';
 const arachnid = new Arachnid(domain).setConcurrency(5).setCrawlDepth(2);
