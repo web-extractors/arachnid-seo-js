@@ -1,4 +1,4 @@
-# Arachnid
+# Arachnid-SEO
 
 An open-source web crawler that extracts internal links info for SEO auditing & optimization purposes.
 The project build upon [Puppeteer](https://pptr.dev/) headless browser. Inspired by [Arachnid PHP](https://github.com/zrashwani/arachnid) library.
@@ -24,13 +24,13 @@ The project build upon [Puppeteer](https://pptr.dev/) headless browser. Inspired
 NodeJS v10.0.0+ is required.
 
 ```sh
-npm install arachnid
+npm install @web-extractors/arachnid-seo
 ```
 
 ### Basic Usage
 
 ```js
-const Arachnid = require('arachnid');
+const Arachnid = require('@web-extractors/arachnid-seo').default;
 const cralwer = new Arachnid('https://www.example.com');
 
 const results = await cralwer
@@ -100,7 +100,7 @@ Map(3) {
 
 ## Advanced Usage
 
-The library designed using Builder pattern to construct flexible `Arachnid` crawling variables, as following:
+The library designed using Builder pattern to construct flexible `Arachnid-SEO` crawling variables, as following:
 
 ### Method chain
 
@@ -139,7 +139,7 @@ To pass additional arguments to puppeteer browser instance, `setPuppeteerOptions
 
 > Refer to puppeteeer documentation for more information about [options](https://github.com/puppeteer/puppeteer/blob/main/docs/api.md#puppeteerlaunchoptions).
 
-Sample below to run `Arachnid` on UNIX with no need to install extra dependencies:
+Sample below to run `Arachnid-SEO` on UNIX with no need to install extra dependencies:
 
 ```js
   cralwer.setPuppeteerOptions({
@@ -174,21 +174,21 @@ cralwer.ignoreRobots();
 
 ### Using Events
 
-Arachnid provides methods to track crawling activity progress, by emitting various events as below:
+Arachnid-SEO provides methods to track crawling activity progress, by emitting various events as below:
 
 #### Events example
 
 ```js
-const Arachnid = require('arachnid');
+const Arachnid = require('@web-extractors/arachnid-seo').default;
 const crawler = new Arachnid('https://www.example.com/').setConcurrency(5).setCrawlDepth(2);
 
 crawler.on('results', resposne => console.log(response))
        .on('pageCrawlingSuccessed', pageResponse => processResponsePerPage(pageResponse))
        .on('pageCrawlingFailed', pageFailed => handleFailedCrwaling(pageFailed));
-       // See https://github.com/WebExtractors/Arachnid#Events for full list of events emitted
+       // See https://github.com/web-extractors/arachnid-seo-js#using-events for full list of events emitted
 ```
 
-See [Full examples](https://github.com/WebExtractors/Arachnid/tree/master/examples) for full list of events emitted.
+See [Full examples](https://github.com/web-extractors/arachnid-seo-js/tree/master/examples) for full list of events emitted.
 
 #### List of events
 
