@@ -105,3 +105,4 @@ dist
 
 
 # Ingore Lib directory (publish directory)
+lib
