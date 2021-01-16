@@ -325,6 +325,8 @@ export default class Arachnid extends EventEmitter {
           return this.getErrorResponse(singlePageUrl, 'Invalid Domain name, cannot be resolved');
         } else if (error?.stack?.includes('ERR_CONNECTION_REFUSED')) {
           return this.getErrorResponse(singlePageUrl, 'Connection refused');
+        } else if (error?.stack?.includes("net::ERR_INTERNET_DISCONNECTED")) {
+          return this.getErrorResponse(singlePageUrl, 'Cannot connect to website');
         } else {
           return this.getErrorResponse(singlePageUrl, 'Unknown error');
         }
