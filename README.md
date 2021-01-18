@@ -15,6 +15,7 @@ The project build upon [Puppeteer](https://pptr.dev/) headless browser. Inspired
    * Meta tag information including: description, keywords, author, robots tags.
    * Detect broken image resources and images with missing alt attribute.
    * Extract page indexability status, and if page is not indexable detect the reason  (ex. blocked by robots.txt, client error, canonicalized)
+   * Retrieve information about page resources (document/stylesheet/javascript/images files...etc requested by a page)
    * More SEO-oriented information will be added soon...
 
 ## Getting Started
@@ -31,12 +32,12 @@ npm install @web-extractors/arachnid-seo
 
 ```js
 const Arachnid = require('@web-extractors/arachnid-seo').default;
-const cralwer = new Arachnid('https://www.example.com');
-
-const results = await cralwer
-                        .setCrawlDepth(2)
-                        .traverse();
-console.log(results) // returns Map of crawled pages
+const crawler = new Arachnid('https://www.example.com');
+crawler.setCrawlDepth(2)
+       .traverse()
+       .then((results) => console.log(results)); //pages results
+// or you can use in await/async manner: 
+// const results = await crawler.traverse();       
 ```
 
 results output:
@@ -180,12 +181,16 @@ Arachnid-SEO provides methods to track crawling activity progress, by emitting v
 
 ```js
 const Arachnid = require('@web-extractors/arachnid-seo').default;
-const crawler = new Arachnid('https://www.example.com/').setConcurrency(5).setCrawlDepth(2);
+const crawler = new Arachnid('https://www.example.com/')
+                        .setConcurrency(5)
+                        .setCrawlDepth(2);
 
 crawler.on('results', resposne => console.log(response))
        .on('pageCrawlingSuccessed', pageResponse => processResponsePerPage(pageResponse))
        .on('pageCrawlingFailed', pageFailed => handleFailedCrwaling(pageFailed));
        // See https://github.com/web-extractors/arachnid-seo-js#using-events for full list of events emitted
+
+crawler.traverse();
 ```
 
 See [Full examples](https://github.com/web-extractors/arachnid-seo-js/tree/master/examples) for full list of events emitted.

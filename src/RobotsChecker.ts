@@ -15,7 +15,8 @@ export default class RobotsChecker {
   private async getOrCreateForDomain(domain: URL): Promise<RobotsParser> {
     if (!this.robotsMap.has(domain.host)) {
       const robotsFileUrl = `${domain.origin}/robots.txt`;
-      const robotsContents = await this.getRobotsFileText(`${domain.origin}/robots.txt`);
+      const robotsContents = await this.getRobotsFileText(`${domain.origin}/robots.txt`)
+                                       .catch((ex: Error) => { return ""; });
       const robotsParserObject = this.createRobotsObject(robotsFileUrl, robotsContents);
       this.robotsMap.set(domain.host, robotsParserObject);
     }
