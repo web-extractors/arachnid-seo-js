@@ -185,7 +185,7 @@ const crawler = new Arachnid('https://www.example.com/')
                         .setConcurrency(5)
                         .setCrawlDepth(2);
 
-crawler.on('results', resposne => console.log(response))
+crawler.on('results', response => console.log(response))
        .on('pageCrawlingSuccessed', pageResponse => processResponsePerPage(pageResponse))
        .on('pageCrawlingFailed', pageFailed => handleFailedCrwaling(pageFailed));
        // See https://github.com/web-extractors/arachnid-seo-js#using-events for full list of events emitted
