@@ -175,7 +175,8 @@ export default class Arachnid extends EventEmitter {
         allPagesData.forEach((data: CrawlPageResult) => {
           const { url, response, extractedInfo, depth, resourceInfo } = data;
           let pageInfoResult: ResultInfo = {
-            url,
+            url: decodeURI(url),
+            urlEncoded: url,
             isInternal: response !== null && response.status() !== 0 ? this.isInternalLink(new URL(url)) : false,
             statusCode: response !== null ? response.status() : 0,
             statusText: response !== null ? response.statusText() : '',
@@ -220,9 +221,10 @@ export default class Arachnid extends EventEmitter {
         const url = new URL(urlString);
         this.urlsToVisitQ.enqueue({ url, depth: depth + 1 });
       } catch (ex) {
-        this.emit('pageCrawlingSkipped', { url: urlString, reason: ex.toString() });
+        this.emit('pageCrawlingSkipped', { url: decodeURI(urlString), reason: ex.toString() });
         const invalidURLResults: ResultInfo = {
-          url: urlString,
+          url: decodeURI(urlString),
+          urlEncoded: urlString,
           isInternal: false,
           statusCode: 0,
           statusText: 'Invalid URL',
@@ -238,7 +240,7 @@ export default class Arachnid extends EventEmitter {
   private shouldExtractInfo(currentPageUrl: URL, response: Response | ErrorResponse): boolean {
     if (response.headers()['content-type'] && !response.headers()['content-type'].includes('text/html')) {
       this.emit('pageCrawlingSkipped', {
-        url: currentPageUrl.toString(),
+        url: decodeURI(currentPageUrl.toString()),
         reason: `Content is non html (${response.headers()['content-type']})`,
       });
       return false;
@@ -247,7 +249,7 @@ export default class Arachnid extends EventEmitter {
     } else if (this.isSameHost(currentPageUrl)) {
       return true;
     } else {
-      this.emit('pageCrawlingSkipped', { url: currentPageUrl.toString(), reason: 'External Url' });
+      this.emit('pageCrawlingSkipped', { url: decodeURI(currentPageUrl.toString()), reason: 'External Url' });
       return false;
     }
   }
@@ -317,7 +319,7 @@ export default class Arachnid extends EventEmitter {
         this.recordSubResource(subResponse, resourcesMap);
       }
     });
-    this.emit('pageCrawlingStarted', { url: singlePageUrl, depth: singlePageLink.depth });
+    this.emit('pageCrawlingStarted', { url: decodeURI(singlePageUrl), depth: singlePageLink.depth });
     const response: Response | ErrorResponse | null = await page
       .goto(this.getNormalizedLink(singlePageLink.url), { waitUntil: 'domcontentloaded', timeout: 0 })
       .catch((error: Error) => {
@@ -333,9 +335,9 @@ export default class Arachnid extends EventEmitter {
       });
     let extractedInfo;
     if (response === null || response.status() > 399 || response.status() === 0) {
-      this.emit('pageCrawlingFailed', { url: singlePageUrl, statusCode: response !== null ? response.status() : 0 });
+      this.emit('pageCrawlingFailed', { url: decodeURI(singlePageUrl), statusCode: response !== null ? response.status() : 0 });
     } else {
-      this.emit('pageCrawlingSuccessed', { url: singlePageUrl, statusCode: response.status() });
+      this.emit('pageCrawlingSuccessed', { url: decodeURI(singlePageUrl), statusCode: response.status() });
       if (this.shouldExtractInfo(singlePageLink.url, response)) {
         try {
           extractedInfo = await mainExtractor(page);
@@ -368,16 +370,17 @@ export default class Arachnid extends EventEmitter {
     const pageUrl = this.getNormalizedLink(responseUrl);
     if (!this.pagesProcessed.has(pageUrl)) {
       const resultItem: ResultInfo = {
-        url: pageUrl,
+        url: decodeURI(pageUrl),
+        urlEncoded: pageUrl,
         statusCode: response.status(),
         statusText: response.statusText(),
         contentType: response.headers()['content-type'],
         isInternal: this.isInternalLink(responseUrl),
         robotsHeader: null,
-        depth,
+        depth
       };
       if ([301, 302].includes(response.status())) {
-        resultItem.redirectUrl = response.headers().location;
+        resultItem.redirectUrl = decodeURI(response.headers().location);
         resultItem.isIndexable = false;
         resultItem.indexabilityStatus = 'Redirected';
       }

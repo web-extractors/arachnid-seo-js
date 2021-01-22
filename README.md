@@ -46,6 +46,7 @@ results output:
 Map(3) {
   "https://www.example.com/" => {
     "url": "https://www.example.com/",
+    "urlEncoded": "https://www.example.com/",
     "isInternal": true,
     "statusCode": 200,
     "statusText": "",
@@ -76,6 +77,7 @@ Map(3) {
   },
   "https://www.iana.org/domains/example" => {
     "url": "https://www.iana.org/domains/example",
+    "urlEncoded": "https://www.iana.org/domains/example",
     "statusCode": 301,
     "statusText": "",
     "contentType": "text/html; charset=iso-8859-1",
@@ -88,6 +90,7 @@ Map(3) {
   },
   "https://www.iana.org/domains/reserved" => {
     "url": "https://www.iana.org/domains/reserved",
+    "urlEncoded": "https://www.iana.org/domains/reserved",
     "isInternal": false,
     "statusCode": 200,
     "statusText": "",
