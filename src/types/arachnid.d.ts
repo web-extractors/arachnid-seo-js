@@ -14,6 +14,7 @@ export interface IndexabilityInfo {
 
 export interface ResultInfo {
   url: string;
+  urlEncoded: string;
   statusCode: number;
   statusText: string;
   isInternal: boolean;
