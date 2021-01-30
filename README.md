@@ -230,7 +230,7 @@ See [Full examples](https://github.com/web-extractors/arachnid-seo-js/tree/maste
 ##### event: 'pageCrawlingFinished'
 
 * Emitted when the page url marked as processed after extracting all information and adding it to thr results map.
-* Payload:  <{url(String), PageResultInfo}>
+* Payload:  <{url(String), [ResultInfo](https://github.com/web-extractors/arachnid-seo-js/blob/203a9249759f1124f74169aae19546819772135f/src/types/arachnid.d.ts#L15-L29)}>
 
 ##### event: 'pageCrawlingSkipped'
 
@@ -240,7 +240,7 @@ See [Full examples](https://github.com/web-extractors/arachnid-seo-js/tree/maste
 ##### event: 'results'
 
 * Emitted when crawling all links matching parameters completed and returning all links information.
-* Payload:  <Map<{url(String), PageResultInfo}>>  
+* Payload:  <Map<{url(String), [ResultInfo](https://github.com/web-extractors/arachnid-seo-js/blob/203a9249759f1124f74169aae19546819772135f/src/types/arachnid.d.ts#L15-L29)}>>  
 
 ## Changelog
 
@@ -248,7 +248,7 @@ We are still in Beta version :new_moon:
 
 ## Contributing
 
-Feel free to raise a ticket under Issue tab or Submit PRs for any new bug fix/feature/enhancement. 
+Feel free to raise a ticket under Issue tab or Submit PRs for any new bug fix/feature/enhancement.
 
 ## Authors
 
