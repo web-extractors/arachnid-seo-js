@@ -122,6 +122,8 @@ cralwer.setCrawlDepth(3);
 
 To specify the maximum results to be crawled, `setMaxResultsNum` method can be used:
 
+> `setMaxResultsNum` overwrites `setCrawlDepth` when both methods are used.
+
 ```js
 cralwer.setMaxResultsNum(100);
 ```
