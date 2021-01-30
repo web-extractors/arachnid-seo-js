@@ -46,6 +46,6 @@ export default class RobotsChecker {
   public async isAllowed(pageUrlTxt: string, userAgent: string): Promise<boolean> {
     const domainRobots = await this.getOrCreateForDomain(new URL(pageUrlTxt));
     const ret = domainRobots.isAllowed(pageUrlTxt, userAgent);
-    return (ret !== undefined) ? ret : true; // default allowed
+    return ret ?? true; // default allowed
   }
 }
