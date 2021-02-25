@@ -21,7 +21,7 @@ export const extractor = async (page: Page): Promise<ExtractedInfo> => {
         images: mainInfo[4],
         canonicalUrl: mainInfo[5],
         links: mainInfo[6],
-        uniqueOutLinks: mainInfo[6].length,
+        uniqueOutLinks: mainInfo[6].length
     };
 };
 

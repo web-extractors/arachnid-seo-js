@@ -1,25 +1,25 @@
 import { MetaInfo } from './arachnid';
 
 export interface ExtractedInfo {
-    title: string;
-    h1: string[];
-    h2: string[];
-    meta: MetaInfo;
-    images?: ImageInfo;
-    canonicalUrl?: string;
-    links?: string[];
-    uniqueOutLinks?: number;
+  title: string;
+  h1: string[];
+  h2: string[];
+  meta: MetaInfo;
+  images?: ImageInfo;
+  canonicalUrl?: string;
+  links?: string[];
+  uniqueOutLinks?: number;
 }
 
 export interface ImageInfo {
-    missingAlt: string[];
+  missingAlt: string[];
 }
 
 export interface ImageElementAttributes {
-    imageAlternateText: string;
-    imageSource: string;
+  imageAlternateText: string;
+  imageSource: string;
 }
 
 export interface ImageElementAttributesWithStatusCode extends ImageElementAttributes {
-    statusCode: number;
+  statusCode: number;
 }
