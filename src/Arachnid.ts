@@ -173,7 +173,7 @@ export default class Arachnid extends EventEmitter {
     await Promise.all(crawlPromises)
       .then((allPagesData) => {
         allPagesData.forEach((data: CrawlPageResult) => {
-          const { url, response, extractedInfo, depth, resourceInfo, responseTime } = data;
+          const { url, response, extractedInfo, depth, resourceInfo, responseTimeMs } = data;
           let pageInfoResult: ResultInfo = {
             url: decodeURI(url),
             urlEncoded: url,
@@ -184,7 +184,7 @@ export default class Arachnid extends EventEmitter {
             robotsHeader: response !== null && response.headers() !== null ? response.headers()['x-robots-tag'] : null,
             depth,
             resourceInfo,
-            responseTime
+            responseTimeMs
           };
           if (extractedInfo) {
             this.addChildrenToQueue(extractedInfo, depth);
@@ -349,7 +349,7 @@ export default class Arachnid extends EventEmitter {
     }
     const pagePerformanceEntry = JSON.parse(
       await page.evaluate(() => JSON.stringify(performance.getEntries()))
-    ).filter((obj: any) => obj.name === singlePageUrl || obj.name === encodeURI(singlePageUrl));
+    ).filter((obj: any) => redirectChain.includes(obj.name));
     
     
     await page.close().catch((e: Error) => {
@@ -362,7 +362,7 @@ export default class Arachnid extends EventEmitter {
       response: response !== null ? response : this.getErrorResponse(singlePageUrl, 'Unknown error'),
       extractedInfo,
       depth: singlePageLink.depth,
-      responseTime: pagePerformanceEntry.length > 0 ? Math.floor(pagePerformanceEntry[0].responseStart/10)/100: undefined
+      responseTimeMs: pagePerformanceEntry.length > 0 ? Math.floor(pagePerformanceEntry[0].responseStart - pagePerformanceEntry[0].requestStart): undefined
     };
 
     if (this.isInternalLink(singlePageLink.url)) {

@@ -26,7 +26,7 @@ export interface ResultInfo {
   redirectUrl?: string;
   DOMInfo?: ExtractedDomInfo;
   resourceInfo?: PageResourceType[];
-  responseTime?: number;
+  responseTimeMs?: number;
 }
 
 export interface CrawlPageResult {
@@ -35,7 +35,7 @@ export interface CrawlPageResult {
   extractedInfo?: ExtractedDomInfo;
   resourceInfo?: PageResourceType[];
   depth: number;
-  responseTime?: number;
+  responseTimeMs?: number;
 }
 
 export interface MetaInfo {
