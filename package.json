@@ -42,7 +42,7 @@
   "devDependencies": {
     "@types/node": "^14.14.20",
     "@types/puppeteer": "^5.4.2",
-    "jsdoc": "^3.6.6",
+    "jsdoc": "^3.6.7",
     "jsdoc-to-markdown": "^6.0.1",
     "prettier": "^2.2.1",
     "ts-migrate": "^0.1.13",
