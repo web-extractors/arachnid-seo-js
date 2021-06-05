@@ -28,6 +28,7 @@ export interface ResultInfo {
   DOMInfo?: ExtractedDomInfo;
   resourceInfo?: PageResourceType[];
   parentLink?: Link;
+  responseTimeMs?: number;
 }
 
 export interface CrawlPageResult {
@@ -36,6 +37,7 @@ export interface CrawlPageResult {
   extractedInfo?: ExtractedDomInfo;
   resourceInfo?: PageResourceType[];
   depth: number;
+  responseTimeMs?: number;
 }
 
 export interface MetaInfo {

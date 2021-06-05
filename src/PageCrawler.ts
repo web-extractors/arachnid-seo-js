@@ -71,6 +71,11 @@ export default class PageCrawler extends EventEmitter {
                 }
             }
         }
+
+        const pagePerformanceEntry = JSON.parse(
+            await page.evaluate(() => JSON.stringify(performance.getEntries()))
+          ).filter((obj: any) => redirectChain.includes(obj.name));
+
         await page.close().catch((e: Error) => {
             if (e.message.includes('Connection closed')) {
                 return 0; // Either invalid request or a race condition
@@ -81,6 +86,7 @@ export default class PageCrawler extends EventEmitter {
             response: response !== null ? response : this.getErrorResponse(singlePageUrl, 'Unknown error'),
             extractedInfo,
             depth: singlePageLink.getDepth(),
+            responseTimeMs: pagePerformanceEntry.length > 0 ? Math.floor(pagePerformanceEntry[0].responseStart - pagePerformanceEntry[0].requestStart): undefined
         };
 
         if (singlePageLink.isInternalLink()) {

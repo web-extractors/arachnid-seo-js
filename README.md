@@ -59,6 +59,7 @@ Map(3) {
         "broken": []
       }
     ],
+    "responseTimeMs": 340,
     "DOMInfo": {
       "title": "Example Domain",
       "h1": [

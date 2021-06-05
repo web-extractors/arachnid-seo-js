@@ -174,7 +174,7 @@ export default class Arachnid extends EventEmitter {
     await Promise.all(crawlPromises)
       .then((allPagesData) => {
         allPagesData.forEach((data: CrawlPageResult) => {
-          const { link, response, extractedInfo, depth, resourceInfo } = data;
+          const { link, response, extractedInfo, depth, resourceInfo, responseTimeMs } = data;
           let pageInfoResult: ResultInfo = {
             url: decodeURI(link.getPageUrl().href),
             urlEncoded: link.getPageUrl().href,
@@ -185,7 +185,7 @@ export default class Arachnid extends EventEmitter {
             robotsHeader: response !== null && response.headers() !== null ? response.headers()['x-robots-tag'] : null,
             depth,
             resourceInfo,
-            parentLink: link.getParentLink(),
+            responseTimeMs
           };
           if (extractedInfo) {
             this.addChildrenToQueue(extractedInfo, depth, link);
@@ -273,6 +273,7 @@ export default class Arachnid extends EventEmitter {
       this.listeners(eventName).forEach((listener) => {
         pageCrawler.on(eventName, listener as (...args: any[]) => void);
       });
+
     });
 
     pageCrawler.on('pageItemVisited', (resultItem: ResultInfo) => {
