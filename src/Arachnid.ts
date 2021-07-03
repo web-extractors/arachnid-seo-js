@@ -112,15 +112,17 @@ export default class Arachnid extends EventEmitter {
       this.maxDepth = 1;
     }
     this.urlsToVisitQ.enqueue(new Link(this.domain.toString(), 1));
-    const browser = await Puppeteer.launch({ headless: true, ...this.puppeteerOptions });
-    this.robotsChecker = new RobotsChecker(browser);
+    this.robotsChecker = new RobotsChecker(this.puppeteerOptions);
+    const pageCrawler = new PageCrawler(this.followSubDomains, this.robotsIsIgnored, this.robotsChecker);
+    this.registerEvents(pageCrawler);
+
     queueLoop: while (!this.urlsToVisitQ.isEmpty()) {
       this.emit(
         'info',
         `Getting next batch size from queue to process, current queue size ${this.urlsToVisitQ.size()}`,
       );
       const urlsToProcess = this.getNextPageBatch();
-      const pagesInfoResults = await this.processPageBatch(browser, urlsToProcess);
+      const pagesInfoResults = await this.processPageBatch(pageCrawler, urlsToProcess);
       for (const item of pagesInfoResults) {
         this.markItemAsProcessed(item);
         if (this.isExceedingMaxResults()) {
@@ -129,7 +131,6 @@ export default class Arachnid extends EventEmitter {
         }
       }
     }
-    browser.close();
     this.emit('results', this.pagesProcessed);
     return this.pagesProcessed;
   }
@@ -159,10 +160,9 @@ export default class Arachnid extends EventEmitter {
     return !this.pagesProcessed.has(normalizedPageUrl);
   }
 
-  private async processPageBatch(browser: Browser, pagesToVisit: Set<Link>): Promise<ResultInfo[]> {
+  private async processPageBatch(pageCrawler: PageCrawler, pagesToVisit: Set<Link>): Promise<ResultInfo[]> {
+    const browser = await Puppeteer.launch({ headless: true, ...this.puppeteerOptions });
     const crawlPromises: Promise<CrawlPageResult>[] = [];
-    const pageCrawler = new PageCrawler(this.followSubDomains, this.robotsIsIgnored, this.robotsChecker);
-    this.registerEvents(pageCrawler);
 
     pagesToVisit.forEach((pageLink: Link) => {
       try {
