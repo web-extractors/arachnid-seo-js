@@ -104,22 +104,23 @@ export default class Arachnid extends EventEmitter {
     } catch (_) {
       return false;
     }
-    return url.protocol === 'https:' || url.protocol === 'http:';
+    return ["http:", "https:"].includes(url.protocol);
   }
 
   public async traverse(): Promise<Map<string, ResultInfo>> {
-    this.robotsChecker = new RobotsChecker(this.puppeteerOptions);
-    if (typeof this.maxDepth === 'undefined' && typeof this.maxResultsNum === 'undefined') {
+    if (!this.maxDepth &&  !this.maxResultsNum) {
       this.maxDepth = 1;
     }
     this.urlsToVisitQ.enqueue(new Link(this.domain.toString(), 1));
+    const browser = await Puppeteer.launch({ headless: true, ...this.puppeteerOptions });
+    this.robotsChecker = new RobotsChecker(browser);
     queueLoop: while (!this.urlsToVisitQ.isEmpty()) {
       this.emit(
         'info',
         `Getting next batch size from queue to process, current queue size ${this.urlsToVisitQ.size()}`,
       );
       const urlsToProcess = this.getNextPageBatch();
-      const pagesInfoResults = await this.processPageBatch(urlsToProcess);
+      const pagesInfoResults = await this.processPageBatch(browser, urlsToProcess);
       for (const item of pagesInfoResults) {
         this.markItemAsProcessed(item);
         if (this.isExceedingMaxResults()) {
@@ -128,6 +129,7 @@ export default class Arachnid extends EventEmitter {
         }
       }
     }
+    browser.close();
     this.emit('results', this.pagesProcessed);
     return this.pagesProcessed;
   }
@@ -157,8 +159,7 @@ export default class Arachnid extends EventEmitter {
     return !this.pagesProcessed.has(normalizedPageUrl);
   }
 
-  private async processPageBatch(pagesToVisit: Set<Link>): Promise<ResultInfo[]> {
-    const browser = await Puppeteer.launch({ headless: true, ...this.puppeteerOptions });
+  private async processPageBatch(browser: Browser, pagesToVisit: Set<Link>): Promise<ResultInfo[]> {
     const crawlPromises: Promise<CrawlPageResult>[] = [];
     const pageCrawler = new PageCrawler(this.followSubDomains, this.robotsIsIgnored, this.robotsChecker);
     this.registerEvents(pageCrawler);
@@ -178,11 +179,11 @@ export default class Arachnid extends EventEmitter {
           let pageInfoResult: ResultInfo = {
             url: decodeURI(link.getPageUrl().href),
             urlEncoded: link.getPageUrl().href,
-            isInternal: response !== null && link.isInternalLink(),
-            statusCode: response !== null ? response.status() : 0,
-            statusText: response !== null ? response.statusText() : '',
-            contentType: response !== null && response.headers() !== null ? response.headers()['content-type'] : null,
-            robotsHeader: response !== null && response.headers() !== null ? response.headers()['x-robots-tag'] : null,
+            isInternal: response && link.isInternalLink(),
+            statusCode: response?.status(),
+            statusText: response?.statusText(),
+            contentType: response?.headers() ? response.headers()['content-type'] : null,
+            robotsHeader: response?.headers() ? response.headers()['x-robots-tag'] : null,
             depth,
             resourceInfo,
             responseTimeMs
@@ -201,12 +202,12 @@ export default class Arachnid extends EventEmitter {
         const urlsAsTxt = [...pagesToVisit].map((item) => item.getPageUrl().href).join(', ');
         this.emit('error', `Failed to resolve batch ${urlsAsTxt}, error:${error}`);
       });
-    browser.close();
+    
     return results;
   }
 
   private addChildrenToQueue(extractedInfo: ExtractedInfo, depth: number, link: Link) {
-    const depthInLimit = typeof this.maxDepth === 'undefined' || depth < this.maxDepth;
+    const depthInLimit =  !this.maxDepth || depth < this.maxDepth;
     let i = 0;
     while (depthInLimit && extractedInfo?.links && i < extractedInfo.links.length) {
       const urlString = extractedInfo.links[i++];
@@ -214,7 +215,7 @@ export default class Arachnid extends EventEmitter {
         continue;
       }
       const resultsNumInLimit =
-        typeof this.maxResultsNum === 'undefined' ||
+        !this.maxResultsNum ||
         this.pagesProcessed.size + this.urlsToVisitQ.size() < this.maxResultsNum;
       if (!resultsNumInLimit) {
         break;

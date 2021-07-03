@@ -15,6 +15,18 @@ export default class PageCrawler extends EventEmitter {
     }
 
     public async crawlPage(singlePageLink: Link, browser: Browser): Promise<CrawlPageResult> {
+        try {
+            return await this.doCrawlPage(singlePageLink, browser);
+        } catch (e: any) {
+            return {
+                link: singlePageLink,
+                depth: singlePageLink.getDepth(),
+                response: this.getErrorResponse(singlePageLink.getNormalizedLink(), "Couldn't crawl link, unable to resolve host or connectivity issue")
+            }
+        }
+    }
+
+    public async doCrawlPage(singlePageLink: Link, browser: Browser): Promise<CrawlPageResult> {
         const singlePageUrl = singlePageLink.getPageUrl().toString();
         const userAgent = await browser.userAgent();
         const isAllowedByRobotsTxt = await this.isAllowedByRobotsTxt(singlePageUrl, userAgent);
@@ -54,12 +66,13 @@ export default class PageCrawler extends EventEmitter {
                 } else {
                     return this.getErrorResponse(singlePageUrl, 'Unknown error');
                 }
+                
             });
         let extractedInfo;
-        if (response === null || response.status() > 399 || response.status() === 0) {
+        if (!response || response.status() > 399 || response.status() === 0) {
             this.emit('pageCrawlingFailed', {
                 url: decodeURI(singlePageUrl),
-                statusCode: response !== null ? response.status() : 0,
+                statusCode: response?.status()
             });
         } else {
             this.emit('pageCrawlingSuccessed', { url: decodeURI(singlePageUrl), statusCode: response.status() });
@@ -83,7 +96,7 @@ export default class PageCrawler extends EventEmitter {
         });
         const resultItem: CrawlPageResult = {
             link: singlePageLink,
-            response: response !== null ? response : this.getErrorResponse(singlePageUrl, 'Unknown error'),
+            response: response ? response : this.getErrorResponse(singlePageUrl, 'Unknown error'),
             extractedInfo,
             depth: singlePageLink.getDepth(),
             responseTimeMs: pagePerformanceEntry.length > 0 ? Math.floor(pagePerformanceEntry[0].responseStart - pagePerformanceEntry[0].requestStart): undefined
@@ -97,7 +110,7 @@ export default class PageCrawler extends EventEmitter {
     }
 
     private async isAllowedByRobotsTxt(pageLink: string, userAgent: string): Promise<boolean> {
-        if (this.robotsIsIgnored || typeof this.robotsChecker === 'undefined') {
+        if (this.robotsIsIgnored || !this.robotsChecker) {
             return true;
         }
 
