@@ -4,7 +4,7 @@ import { RobotsParser } from './types/robots-parser';
 import robotsParser from 'robots-parser';
 
 export default class RobotsChecker {
-  private puppeteerParams: LaunchOptions; 
+  private puppeteerParams: LaunchOptions;
   private robotsMap: Map<string, RobotsParser>;
 
   constructor(puppeteerParams: LaunchOptions) {
@@ -15,8 +15,9 @@ export default class RobotsChecker {
   private async getOrCreateForDomain(domain: URL): Promise<RobotsParser> {
     if (!this.robotsMap.has(domain.host)) {
       const robotsFileUrl = `${domain.origin}/robots.txt`;
-      const robotsContents = await this.getRobotsFileText(`${domain.origin}/robots.txt`)
-                                       .catch((ex: Error) => { return ""; });
+      const robotsContents = await this.getRobotsFileText(`${domain.origin}/robots.txt`).catch((ex: Error) => {
+        return '';
+      });
       const robotsParserObject = this.createRobotsObject(robotsFileUrl, robotsContents);
       this.robotsMap.set(domain.host, robotsParserObject);
     }
@@ -37,9 +38,7 @@ export default class RobotsChecker {
       robotsTxt = await robotsResponse!.text();
     }
 
-    robotsPage.close();
     browser.close();
-
     return robotsTxt;
   }
 

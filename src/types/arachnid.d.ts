@@ -1,5 +1,6 @@
 import { Headers, Response } from 'puppeteer';
 import { URL } from 'url';
+import Link from '../Link';
 import { ExtractedInfo as ExtractedDomInfo } from './mainExtractor';
 
 export interface UrlWithDepth {
@@ -26,11 +27,12 @@ export interface ResultInfo {
   redirectUrl?: string;
   DOMInfo?: ExtractedDomInfo;
   resourceInfo?: PageResourceType[];
+  parentLink?: Link;
   responseTimeMs?: number;
 }
 
 export interface CrawlPageResult {
-  url: string;
+  link: Link;
   response: Response | ErrorResponse;
   extractedInfo?: ExtractedDomInfo;
   resourceInfo?: PageResourceType[];
