@@ -35,6 +35,8 @@
   },
   "homepage": "https://github.com/web-extractors/arachnid-seo-js#readme",
   "dependencies": {
+    "markdown-it": "^12.3.2",
+    "marked": "^4.0.10",
     "puppeteer": "5.2.1",
     "queue-fifo": "^0.2.6",
     "robots-parser": "^2.1.1"
@@ -43,9 +45,9 @@
     "@types/node": "^14.14.20",
     "@types/puppeteer": "^5.4.2",
     "jsdoc": "^3.6.7",
-    "jsdoc-to-markdown": "^6.0.1",
+    "jsdoc-to-markdown": "^7.1.0",
     "prettier": "^2.2.1",
-    "ts-migrate": "^0.1.13",
+    "ts-migrate": "^0.1.27",
     "tslint": "^6.1.3",
     "tslint-config-prettier": "^1.18.0",
     "typescript": "^4.1.3"
