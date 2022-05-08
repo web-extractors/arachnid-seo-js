@@ -1,7 +1,7 @@
-import { Headers, Response } from 'puppeteer';
-import { URL } from 'url';
-import Link from '../Link';
-import { ExtractedInfo as ExtractedDomInfo } from './mainExtractor';
+import { HTTPResponse } from 'puppeteer'
+import { URL } from 'url'
+import Link from '../Link'
+import { ExtractedInfo as ExtractedDomInfo } from './mainExtractor'
 
 export interface UrlWithDepth {
   url: URL;
@@ -11,6 +11,19 @@ export interface UrlWithDepth {
 export interface IndexabilityInfo {
   isIndexable: boolean;
   indexabilityStatus: string;
+}
+
+export interface ErrorResponse {
+  url(): string;
+  status(): number;
+  statusText(): string;
+  headers(): Record<string, string>;
+}
+
+export interface PageResourceType {
+  type: string;
+  count: number;
+  broken: string[];
 }
 
 export interface ResultInfo {
@@ -33,7 +46,7 @@ export interface ResultInfo {
 
 export interface CrawlPageResult {
   link: Link;
-  response: Response | ErrorResponse;
+  response: HTTPResponse | ErrorResponse;
   extractedInfo?: ExtractedDomInfo;
   resourceInfo?: PageResourceType[];
   depth: number;
@@ -46,13 +59,6 @@ export interface MetaInfo {
   author?: string;
   robots?: string;
   description?: string;
-}
-
-export interface ErrorResponse {
-  url(): string;
-  status(): number;
-  statusText(): string;
-  headers(): Headers;
 }
 
 export interface UrlsToVisitQ {
@@ -78,12 +84,6 @@ export interface ResultItem {
   indexability?: boolean;
   indexabilityStatus?: string;
   resourceInfo?: PageResourceType[];
-}
-
-export interface PageResourceType {
-  type: string;
-  count: number;
-  broken: string[];
 }
 
 export interface ExtractIndexability {

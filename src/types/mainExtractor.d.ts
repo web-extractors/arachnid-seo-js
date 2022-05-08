@@ -1,4 +1,8 @@
-import { MetaInfo } from './arachnid';
+import { MetaInfo } from './arachnid'
+
+export interface ImageInfo {
+  missingAlt: string[];
+}
 
 export interface ExtractedInfo {
   title: string;
@@ -9,10 +13,6 @@ export interface ExtractedInfo {
   canonicalUrl?: string;
   links?: string[];
   uniqueOutLinks?: number;
-}
-
-export interface ImageInfo {
-  missingAlt: string[];
 }
 
 export interface ImageElementAttributes {
